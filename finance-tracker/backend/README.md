@@ -21,7 +21,13 @@ The backend now has a committed dependency manifest and environment template:
 - `requirements.txt`
 - `.env.example`
 
-Important: the current codebase still reads its development settings directly from `backend_project/settings.py`. The `.env.example` file defines the intended environment contract, and full settings wiring will be completed in the next foundation task.
+The backend now uses split settings:
+
+- `config.settings.base`
+- `config.settings.local`
+- `config.settings.test`
+
+The default runtime entrypoint is `config.settings.local`.
 
 ## Fresh Setup Path
 
@@ -35,6 +41,7 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 Copy-Item .env.example .env
 python manage.py check
+python manage.py test --settings=config.settings.test
 python manage.py runserver
 ```
 
@@ -146,6 +153,7 @@ cd backend
 Copy-Item .env.example .env
 pip install -r requirements.txt
 python manage.py check
+python manage.py test --settings=config.settings.test
 python manage.py runserver
 ```
 
@@ -155,5 +163,6 @@ python manage.py runserver
 
 - The checked-in `venv` folder should be treated as disposable local state, not as the source of truth for backend setup.
 - The source of truth for backend packages is now `requirements.txt`.
-- The source of truth for backend environment variables is now `.env.example`, even though the settings file will be fully wired in the next task.
+- The source of truth for backend environment variables is now `.env.example`.
+- Runtime defaults use `config.settings.local`, while tests should use `config.settings.test`.
 - More formal health and test commands will be added in later foundation tasks.
