@@ -1,0 +1,54 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  smoke:
+    name: Smoke checks
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: finance-tracker/frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: finance-tracker/backend
+        shell: pwsh
+        run: |
+          python -m venv .venv
+          .\.venv\Scripts\python.exe -m pip install --upgrade pip
+          .\.venv\Scripts\python.exe -m pip install -r requirements.txt
+          if (-not (Test-Path .env)) {
+            Copy-Item .env.example .env
+          }
+
+      - name: Install frontend dependencies
+        working-directory: finance-tracker/frontend
+        shell: pwsh
+        run: |
+          npm ci
+          if (-not (Test-Path .env)) {
+            Copy-Item .env.example .env
+          }
+
+      - name: Run smoke checks
+        shell: pwsh
+        run: .\finance-tracker\scripts\dev-check.ps1

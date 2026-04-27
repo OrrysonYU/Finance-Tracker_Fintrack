@@ -144,7 +144,25 @@ backend/
 - Avoid generic catch-all files such as `helpers.py` or `misc.py`.
 - Group tests by feature, not by huge shared buckets.
 
-## Manual Health Check
+## Shared Health Check
+
+Run the shared smoke script from the application root before committing a task:
+
+```powershell
+cd finance-tracker
+.\scripts\dev-check.ps1
+```
+
+The script runs:
+
+- backend Django system checks
+- backend tests with `config.settings.test`
+- frontend lint
+- frontend production build
+
+It uses `backend\.venv\Scripts\python.exe` when available. CI creates the same `.venv` path before running the script.
+
+## Manual Backend Health Check
 
 When a working Python environment is available, use these commands as the minimum manual check:
 
@@ -158,7 +176,7 @@ python manage.py test --settings=config.settings.test
 python manage.py runserver
 ```
 
-`python manage.py check`, `python manage.py test --settings=config.settings.test`, and the API root at `http://127.0.0.1:8000/` are the main validation targets for this stage.
+`python manage.py check`, `python manage.py test --settings=config.settings.test`, and the API root at `http://127.0.0.1:8000/` remain useful backend-only validation targets.
 
 ## Notes for the Rebuild
 
@@ -167,4 +185,4 @@ python manage.py runserver
 - The source of truth for backend packages is now `requirements.txt`.
 - The source of truth for backend environment variables is now `.env.example`.
 - Runtime defaults use `config.settings.local`, while tests should use `config.settings.test`.
-- More formal health and test commands will be added in later foundation tasks.
+- Use `..\scripts\dev-check.ps1` as the repeatable full-stack smoke check before task commits.
