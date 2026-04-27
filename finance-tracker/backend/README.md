@@ -31,7 +31,7 @@ The default runtime entrypoint is `config.settings.local`.
 
 ## Fresh Setup Path
 
-Create a clean virtual environment instead of depending on the checked-in local venv folders.
+Use one local virtual environment: `.venv`.
 
 ```powershell
 cd backend
@@ -150,18 +150,20 @@ When a working Python environment is available, use these commands as the minimu
 
 ```powershell
 cd backend
-Copy-Item .env.example .env
-pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+python -m pip install -r requirements.txt
 python manage.py check
 python manage.py test --settings=config.settings.test
 python manage.py runserver
 ```
 
-`python manage.py check` is the main validation target for this task.
+`python manage.py check`, `python manage.py test --settings=config.settings.test`, and the API root at `http://127.0.0.1:8000/` are the main validation targets for this stage.
 
 ## Notes for the Rebuild
 
-- The checked-in `venv` folder should be treated as disposable local state, not as the source of truth for backend setup.
+- The only supported backend virtual environment is `.venv`.
+- If another local virtual environment such as `venv` exists, treat it as stale local state and remove it after `.venv` passes the health check.
 - The source of truth for backend packages is now `requirements.txt`.
 - The source of truth for backend environment variables is now `.env.example`.
 - Runtime defaults use `config.settings.local`, while tests should use `config.settings.test`.
