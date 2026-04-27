@@ -16,7 +16,47 @@ cd backend
 python manage.py runserver
 ```
 
-Note: dependency and environment standardization is still pending. The next foundation task will add a committed dependency manifest and environment template.
+The backend now has a committed dependency manifest and environment template:
+
+- `requirements.txt`
+- `.env.example`
+
+Important: the current codebase still reads its development settings directly from `backend_project/settings.py`. The `.env.example` file defines the intended environment contract, and full settings wiring will be completed in the next foundation task.
+
+## Fresh Setup Path
+
+Create a clean virtual environment instead of depending on the checked-in local venv folders.
+
+```powershell
+cd backend
+py -3 -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+Copy-Item .env.example .env
+python manage.py check
+python manage.py runserver
+```
+
+If your machine does not have the `py` launcher, use an installed Python executable instead:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+## Dependency Manifest
+
+The backend currently depends on:
+
+- Django
+- Django REST Framework
+- Simple JWT
+- drf-spectacular
+- django-cors-headers
+- django-filter
+
+SQLite is used for local development and does not require a separate package in `requirements.txt`.
 
 ## Current Functional Areas
 
@@ -103,8 +143,17 @@ When a working Python environment is available, use these commands as the minimu
 
 ```powershell
 cd backend
+Copy-Item .env.example .env
+pip install -r requirements.txt
 python manage.py check
 python manage.py runserver
 ```
 
-More formal health and test commands will be added in later foundation tasks.
+`python manage.py check` is the main validation target for this task.
+
+## Notes for the Rebuild
+
+- The checked-in `venv` folder should be treated as disposable local state, not as the source of truth for backend setup.
+- The source of truth for backend packages is now `requirements.txt`.
+- The source of truth for backend environment variables is now `.env.example`, even though the settings file will be fully wired in the next task.
+- More formal health and test commands will be added in later foundation tasks.

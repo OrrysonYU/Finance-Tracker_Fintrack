@@ -1,1 +1,14 @@
-.aider*
+
+# Local environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Python cache and local DB
+__pycache__/
+*.py[cod]
+
+# Frontend dependencies
+node_modules/
