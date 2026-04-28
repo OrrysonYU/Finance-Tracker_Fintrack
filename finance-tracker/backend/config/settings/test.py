@@ -2,7 +2,7 @@ from .base import *  # noqa: F403
 
 
 DEBUG = False
-SECRET_KEY = "django-insecure-test-only-key"
+SECRET_KEY = "django-insecure-test-only-key-for-fintrack-suite"
 ALLOWED_HOSTS = ["testserver", "127.0.0.1", "localhost"]
 CORS_ALLOW_ALL_ORIGINS = True
 DATABASES = {

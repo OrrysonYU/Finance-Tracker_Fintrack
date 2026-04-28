@@ -31,7 +31,13 @@ class CustomUserModelTest(TestCase):
         user.default_currency = "USD"
         user.locale = "en-US"
         user.ai_personalization_enabled = False
-        user.save(update_fields=["default_currency", "locale", "ai_personalization_enabled"])
+        user.save(
+            update_fields=[
+                "default_currency",
+                "locale",
+                "ai_personalization_enabled",
+            ]
+        )
         user.refresh_from_db()
 
         self.assertEqual(user.default_currency, "USD")
