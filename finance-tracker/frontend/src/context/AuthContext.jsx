@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { authAPI } from "../lib/api";
+import { authApi } from "../features/auth/api";
+import { AUTH_SESSION_EXPIRED_EVENT } from "../lib/http";
 import { AuthContext } from "./AuthContextCore";
 
 export function AuthProvider({ children }) {
@@ -7,17 +8,16 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   const fetchUser = async () => {
-    const token = localStorage.getItem("access_token");
-    if (!token) {
+    if (!authApi.hasSession()) {
       setLoading(false);
       return;
     }
+
     try {
-      const { data } = await authAPI.me();
-      setUser(data);
+      const currentUser = await authApi.getCurrentUser();
+      setUser(currentUser);
     } catch {
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
+      authApi.logout();
       setUser(null);
     } finally {
       setLoading(false);
@@ -28,21 +28,24 @@ export function AuthProvider({ children }) {
     fetchUser();
   }, []);
 
+  useEffect(() => {
+    const handleSessionExpired = () => setUser(null);
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+    return () => window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
+  }, []);
+
   const login = async (username, password) => {
-    const { data } = await authAPI.login({ username, password });
-    localStorage.setItem("access_token", data.access);
-    localStorage.setItem("refresh_token", data.refresh);
-    await fetchUser();
+    const data = await authApi.login({ username, password });
+    setUser(data.user);
   };
 
   const register = async (username, email, password) => {
-    await authAPI.register({ username, email, password });
-    await login(username, password);
+    const data = await authApi.register({ username, email, password });
+    setUser(data.user);
   };
 
   const logout = () => {
-    localStorage.removeItem("access_token");
-    localStorage.removeItem("refresh_token");
+    authApi.logout();
     setUser(null);
   };
 
