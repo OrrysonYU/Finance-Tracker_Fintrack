@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "drf_spectacular",
     "django_filters",
-    "users",
+    "users.apps.UsersConfig",
     "finance",
     "budgets",
     "reports",
@@ -106,6 +106,7 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+AUTH_USER_MODEL = "users.User"
 
 
 REST_FRAMEWORK = {

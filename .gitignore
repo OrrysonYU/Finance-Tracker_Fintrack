@@ -9,6 +9,8 @@ venv/
 # Python cache and local DB
 __pycache__/
 *.py[cod]
+finance-tracker/backend/*.sqlite3
+finance-tracker/backend/*.sqlite3-journal
 
 # Frontend dependencies
 node_modules/

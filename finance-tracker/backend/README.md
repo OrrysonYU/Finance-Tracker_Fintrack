@@ -40,6 +40,7 @@ py -3 -m venv .venv
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 Copy-Item .env.example .env
+python manage.py migrate
 python manage.py check
 python manage.py test --settings=config.settings.test
 python manage.py runserver
@@ -171,6 +172,7 @@ cd backend
 .\.venv\Scripts\Activate.ps1
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 python -m pip install -r requirements.txt
+python manage.py migrate
 python manage.py check
 python manage.py test --settings=config.settings.test
 python manage.py runserver
@@ -186,3 +188,6 @@ python manage.py runserver
 - The source of truth for backend environment variables is now `.env.example`.
 - Runtime defaults use `config.settings.local`, while tests should use `config.settings.test`.
 - Use `..\scripts\dev-check.ps1` as the repeatable full-stack smoke check before task commits.
+- The project-owned user model is `users.User`; fresh local databases should be created with `python manage.py migrate` before creating a superuser.
+- Pre-AUTH-001 SQLite files should be backed up and recreated because Django custom user models need a clean migration baseline.
+- SQLite databases are local runtime files and should not be committed.
