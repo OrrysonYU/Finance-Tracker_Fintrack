@@ -3,6 +3,8 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
+from django.db.models import Q
+from django.utils.text import slugify
 from django.utils import timezone
 
 User = get_user_model()
@@ -30,7 +32,11 @@ class Account(models.Model):
 
 
 class Category(models.Model):
-    name = models.CharField(max_length=64, unique=True)
+    class Type(models.TextChoices):
+        INCOME = "INCOME", "Income"
+        EXPENSE = "EXPENSE", "Expense"
+        TRANSFER = "TRANSFER", "Transfer"
+
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -38,10 +44,46 @@ class Category(models.Model):
         null=True,
         blank=True,
     )
-    # user=None => global default category (shared)
+    name = models.CharField(max_length=80)
+    slug = models.SlugField(max_length=100, blank=True)
+    category_type = models.CharField(
+        max_length=20,
+        choices=Type.choices,
+        default=Type.EXPENSE,
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["category_type", "name"]
+        verbose_name_plural = "categories"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["slug", "category_type"],
+                condition=Q(user__isnull=True),
+                name="unique_default_category_slug_type",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "slug", "category_type"],
+                condition=Q(user__isnull=False),
+                name="unique_user_category_slug_type",
+            ),
+        ]
+
+    @property
+    def is_default(self):
+        return self.user_id is None
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.strip()
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        scope = "Default" if self.is_default else self.user
+        return f"{self.name} ({self.get_category_type_display()} - {scope})"
 
 
 class Transaction(models.Model):

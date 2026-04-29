@@ -18,12 +18,16 @@ def api_root(request):
 class CategoryViewSet(viewsets.ModelViewSet):
     serializer_class = CategorySerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ["category_type", "is_active"]
     search_fields = ["name"]
-    ordering_fields = ["name", "id"]
+    ordering_fields = ["category_type", "name", "id"]
 
     def get_queryset(self):
         # user-specific + global categories
-        return Category.objects.filter(Q(user=self.request.user) | Q(user__isnull=True))
+        return Category.objects.filter(
+            Q(user=self.request.user) | Q(user__isnull=True),
+            is_active=True,
+        )
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

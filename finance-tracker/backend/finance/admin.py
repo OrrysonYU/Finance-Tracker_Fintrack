@@ -5,8 +5,21 @@ from .models import Account, Transaction, SavingGoal, Category
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "user")
-    search_fields = ("name",)
+    list_display = (
+        "id",
+        "name",
+        "category_type",
+        "scope",
+        "is_active",
+        "updated_at",
+    )
+    list_filter = ("category_type", "is_active", "user")
+    search_fields = ("name", "slug", "user__username", "user__email")
+    ordering = ("category_type", "name")
+    readonly_fields = ("created_at", "updated_at")
+
+    def scope(self, obj):
+        return "Default" if obj.is_default else obj.user
 
 
 @admin.register(Account)

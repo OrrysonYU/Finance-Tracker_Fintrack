@@ -3,9 +3,19 @@ from .models import Account, Transaction, SavingGoal, Category
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    is_default = serializers.ReadOnlyField()
+
     class Meta:
         model = Category
-        fields = ["id", "name"]
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "category_type",
+            "is_default",
+            "is_active",
+        ]
+        read_only_fields = ["slug", "is_default"]
 
 
 class AccountSerializer(serializers.ModelSerializer):
