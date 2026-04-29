@@ -137,7 +137,8 @@ finance-tracker/
 7. AI service boundary
 8. Rule-based AI features
 9. Predictive AI features
-10. Hardening, test coverage, release readiness
+10. Product UI/UX modernization
+11. Hardening, test coverage, release readiness
 
 ## 5. Core Modules and Features
 
@@ -196,6 +197,9 @@ Features:
 
 ### Module H. Quality and Operations
 Features:
+- product UI/UX modernization
+- design system/theme consistency
+- responsive visual QA
 - API tests
 - frontend smoke checks
 - CI automation
@@ -736,6 +740,120 @@ Note: every task below is intended to fit within one focused 30-90 minute sessio
 ---
 
 ## Module H. Quality and Operations
+
+### Feature H0. Product UI/UX Modernization
+
+#### Task UIX-001 - Define product UI direction options before implementation
+- Description: Prepare several distinct visual direction options for the real-world finance product experience before any modernization work begins.
+- Files to create/update:
+  - `finance-tracker/docs/ui-directions.md`
+- Expected output/result: The user can compare multiple UI directions, choose one, and understand tradeoffs before implementation starts.
+- Manual test instructions:
+  1. Open `docs/ui-directions.md`.
+  2. Confirm it includes several clearly different product directions with examples of layout, color, typography, interaction style, and dashboard feel.
+  3. Confirm no application code changed.
+- Dependencies: AI-006
+
+#### Task UIX-002 - Choose design system/theme and establish UI tokens
+- Description: Convert the selected visual direction into a practical design system with colors, typography, spacing, radii, shadows, surfaces, states, and chart styling rules.
+- Files to create/update:
+  - `finance-tracker/frontend/src/styles/theme.css`
+  - `finance-tracker/frontend/src/styles/tokens.css`
+  - `finance-tracker/frontend/src/components/ui/*`
+  - `finance-tracker/docs/ui-directions.md`
+- Expected output/result: The frontend has a reusable theme foundation for consistent production-grade screens.
+- Manual test instructions:
+  1. Start the frontend.
+  2. Confirm existing pages still render.
+  3. Inspect the theme documentation and confirm it matches the selected direction.
+- Dependencies: UIX-001
+
+#### Task UIX-003 - Modernize app shell and responsive navigation
+- Description: Upgrade the protected app shell, navigation, page frame, spacing system, and mobile behavior to feel like a polished finance product.
+- Files to create/update:
+  - `finance-tracker/frontend/src/app/AppRoutes.jsx`
+  - `finance-tracker/frontend/src/app/AuthProvider.jsx`
+  - `finance-tracker/frontend/src/components/layout/*`
+  - `finance-tracker/frontend/src/styles/theme.css`
+- Expected output/result: Authenticated users get a professional responsive layout with clear navigation, account context, and consistent page structure.
+- Manual test instructions:
+  1. Log in on desktop width and confirm navigation, page spacing, and active states work.
+  2. Resize to mobile width and confirm navigation remains usable.
+  3. Refresh a protected route and confirm the session and layout remain stable.
+- Dependencies: UIX-002, AUTH-006
+
+#### Task UIX-004 - Polish auth pages, forms, and empty/loading/error states
+- Description: Apply the selected production UI direction to login, registration, reusable form controls, validation messages, loading states, and empty/error states.
+- Files to create/update:
+  - `finance-tracker/frontend/src/features/auth/LoginPage.jsx`
+  - `finance-tracker/frontend/src/features/auth/RegisterPage.jsx`
+  - `finance-tracker/frontend/src/components/ui/*`
+  - `finance-tracker/frontend/src/styles/theme.css`
+- Expected output/result: Auth screens feel polished, trustworthy, responsive, and consistent with the rest of the product.
+- Manual test instructions:
+  1. Visit `/login` and `/register`.
+  2. Confirm valid, invalid, loading, and error states are clear.
+  3. Confirm both pages work on desktop and mobile widths.
+- Dependencies: UIX-002, AUTH-006
+
+#### Task UIX-005 - Polish dashboard cards, financial summaries, and charts
+- Description: Upgrade the dashboard into a production-grade finance overview with strong KPI cards, chart hierarchy, spending summaries, AI insight placement, and responsive behavior.
+- Files to create/update:
+  - `finance-tracker/frontend/src/features/dashboard/DashboardPage.jsx`
+  - `finance-tracker/frontend/src/features/dashboard/components/*`
+  - `finance-tracker/frontend/src/features/ai-insights/AiInsightsPanel.jsx`
+  - `finance-tracker/frontend/src/components/ui/*`
+- Expected output/result: The dashboard presents balances, trends, budgets, goals, and AI insights in a polished real-world product layout.
+- Manual test instructions:
+  1. Open the dashboard with sample finance data.
+  2. Confirm KPI cards, charts, summaries, and AI insights are visually clear and correct.
+  3. Resize to tablet and mobile widths and confirm the layout remains usable.
+- Dependencies: UIX-002, REP-003, AI-006
+
+#### Task UIX-006 - Polish transaction and account data views
+- Description: Modernize finance-heavy screens with readable tables, cards, filters, form layouts, row actions, empty states, and loading states.
+- Files to create/update:
+  - `finance-tracker/frontend/src/features/accounts/AccountsPage.jsx`
+  - `finance-tracker/frontend/src/features/accounts/components/*`
+  - `finance-tracker/frontend/src/features/transactions/TransactionsPage.jsx`
+  - `finance-tracker/frontend/src/features/transactions/components/*`
+  - `finance-tracker/frontend/src/components/ui/*`
+- Expected output/result: Accounts and transactions feel like usable production finance tools rather than basic CRUD pages.
+- Manual test instructions:
+  1. Add, view, filter, and delete account/transaction data.
+  2. Confirm tables and cards are readable with short and long data.
+  3. Confirm empty, loading, and error states are polished.
+- Dependencies: UIX-002, FIN-006, FIN-007
+
+#### Task UIX-007 - Polish budgets, goals, reports, and AI insight surfaces
+- Description: Apply the selected UI direction to remaining finance modules so budgets, goals, reports, and AI insights share one cohesive product language.
+- Files to create/update:
+  - `finance-tracker/frontend/src/features/budgets/BudgetsPage.jsx`
+  - `finance-tracker/frontend/src/features/budgets/components/*`
+  - `finance-tracker/frontend/src/features/goals/GoalsPage.jsx`
+  - `finance-tracker/frontend/src/features/goals/components/*`
+  - `finance-tracker/frontend/src/features/reports/*`
+  - `finance-tracker/frontend/src/features/ai-insights/*`
+- Expected output/result: Secondary product areas feel consistent with the dashboard and core ledger screens.
+- Manual test instructions:
+  1. Create budgets and goals and inspect their visual states.
+  2. Open reports and AI insight areas with sample data.
+  3. Confirm cards, charts, tables, and forms use consistent spacing and styling.
+- Dependencies: UIX-002, GOAL-002, BUD-003, REP-003, AI-006
+
+#### Task UIX-008 - Run responsive, accessibility, and visual QA pass
+- Description: Perform a final product UI pass for responsive layout, keyboard usability, focus states, contrast, empty states, chart readability, and runtime visual issues.
+- Files to create/update:
+  - `finance-tracker/frontend/QA_CHECKLIST.md`
+  - `finance-tracker/docs/ui-directions.md`
+  - `finance-tracker/frontend/src/components/ui/*`
+  - affected feature UI files as needed
+- Expected output/result: The frontend has a repeatable UI QA checklist and passes a production-readiness visual review.
+- Manual test instructions:
+  1. Follow `frontend/QA_CHECKLIST.md` across desktop, tablet, and mobile widths.
+  2. Confirm keyboard focus and contrast are acceptable.
+  3. Confirm no obvious layout breaks, clipped content, or unreadable charts remain.
+- Dependencies: UIX-003, UIX-004, UIX-005, UIX-006, UIX-007
 
 ### Feature H1. Quality Hardening
 
