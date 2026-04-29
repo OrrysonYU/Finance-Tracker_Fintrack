@@ -24,6 +24,7 @@ class Account(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="accounts")
     name = models.CharField(max_length=120)
     type = models.CharField(max_length=50, choices=Type.choices, default=Type.OTHER)
+    opening_balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
     currency = models.CharField(max_length=10, default="KES")
     created_at = models.DateTimeField(auto_now_add=True)
@@ -96,8 +97,13 @@ class Category(models.Model):
 
 class Transaction(models.Model):
     """Financial transaction linked to an account."""
+
     account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="transactions")
-    amount = models.DecimalField(max_digits=12, decimal_places=2)
+    amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
     description = models.CharField(max_length=255, blank=True, default="")
     is_credit = models.BooleanField(
         default=False,
@@ -111,9 +117,13 @@ class Transaction(models.Model):
         related_name="transactions",
     )
     timestamp = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ["-timestamp"]
+        indexes = [
+            models.Index(fields=["account", "-timestamp"], name="txn_account_time_idx"),
+        ]
 
     def __str__(self):
         direction = "+" if self.is_credit else "-"

@@ -8,6 +8,7 @@ from finance.serializers import (
     SavingGoalSerializer,
     TransactionSerializer,
 )
+from finance.services import balance_service
 
 from .account import AccountViewSet
 
@@ -42,6 +43,20 @@ class TransactionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Transaction.objects.filter(account__user=self.request.user)
+
+    def perform_create(self, serializer):
+        ledger_entry = balance_service.create_transaction(**serializer.validated_data)
+        serializer.instance = ledger_entry
+
+    def perform_update(self, serializer):
+        ledger_entry = balance_service.update_transaction(
+            serializer.instance,
+            **serializer.validated_data,
+        )
+        serializer.instance = ledger_entry
+
+    def perform_destroy(self, instance):
+        balance_service.delete_transaction(instance)
 
 
 class SavingGoalViewSet(viewsets.ModelViewSet):

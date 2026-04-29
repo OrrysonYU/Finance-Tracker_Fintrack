@@ -11,6 +11,7 @@ class AccountSerializer(serializers.ModelSerializer):
             "name",
             "type",
             "currency",
+            "opening_balance",
             "balance",
             "created_at",
             "updated_at",
