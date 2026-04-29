@@ -12,6 +12,7 @@ User = get_user_model()
 
 class Account(models.Model):
     """Bank accounts, mobile money, cash wallets, etc."""
+
     class Type(models.TextChoices):
         BANK = "BANK", "Bank"
         CASH = "CASH", "Cash"
@@ -24,8 +25,15 @@ class Account(models.Model):
     name = models.CharField(max_length=120)
     type = models.CharField(max_length=50, choices=Type.choices, default=Type.OTHER)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=0)
-    currency = models.CharField(max_length=10, default="KES")  # or USD, EUR, etc.
+    currency = models.CharField(max_length=10, default="KES")
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["name"]
+        indexes = [
+            models.Index(fields=["user", "name"], name="account_user_name_idx"),
+        ]
 
     def __str__(self):
         return f"{self.user} • {self.name} ({self.type}) • {self.balance} {self.currency}"

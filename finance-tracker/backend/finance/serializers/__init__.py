@@ -1,5 +1,8 @@
 from rest_framework import serializers
-from .models import Account, Transaction, SavingGoal, Category
+
+from finance.models import Category, SavingGoal, Transaction
+
+from .account import AccountSerializer
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -18,23 +21,17 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["slug", "is_default"]
 
 
-class AccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Account
-        fields = "__all__"
-        read_only_fields = ["user", "balance"]  # balance will be maintained by signals
-
-
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction
         fields = "__all__"
 
     def validate(self, data):
-        # Ensure user only touches own account
         request = self.context.get("request")
         if request and data.get("account") and data["account"].user != request.user:
-            raise serializers.ValidationError("You can only add transactions to your own accounts.")
+            raise serializers.ValidationError(
+                "You can only add transactions to your own accounts."
+            )
         return data
 
 
@@ -43,3 +40,11 @@ class SavingGoalSerializer(serializers.ModelSerializer):
         model = SavingGoal
         fields = "__all__"
         read_only_fields = ["user", "current_amount"]
+
+
+__all__ = [
+    "AccountSerializer",
+    "CategorySerializer",
+    "SavingGoalSerializer",
+    "TransactionSerializer",
+]

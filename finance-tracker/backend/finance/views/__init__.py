@@ -1,14 +1,15 @@
 from django.db.models import Q
-from rest_framework import viewsets, permissions
 from django.http import JsonResponse
+from rest_framework import permissions, viewsets
 
-from .models import Account, Transaction, SavingGoal, Category
-from .serializers import (
-    AccountSerializer,
-    TransactionSerializer,
-    SavingGoalSerializer,
+from finance.models import Category, SavingGoal, Transaction
+from finance.serializers import (
     CategorySerializer,
+    SavingGoalSerializer,
+    TransactionSerializer,
 )
+
+from .account import AccountViewSet
 
 
 def api_root(request):
@@ -23,25 +24,10 @@ class CategoryViewSet(viewsets.ModelViewSet):
     ordering_fields = ["category_type", "name", "id"]
 
     def get_queryset(self):
-        # user-specific + global categories
         return Category.objects.filter(
             Q(user=self.request.user) | Q(user__isnull=True),
             is_active=True,
         )
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
-class AccountViewSet(viewsets.ModelViewSet):
-    serializer_class = AccountSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ["type", "currency"]
-    search_fields = ["name"]
-    ordering_fields = ["name", "balance", "id"]
-
-    def get_queryset(self):
-        return Account.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -70,3 +56,12 @@ class SavingGoalViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+__all__ = [
+    "AccountViewSet",
+    "CategoryViewSet",
+    "SavingGoalViewSet",
+    "TransactionViewSet",
+    "api_root",
+]
