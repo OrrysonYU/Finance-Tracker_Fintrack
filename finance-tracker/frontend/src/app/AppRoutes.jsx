@@ -2,9 +2,9 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import Layout from "../components/Layout";
 import { useAuth } from "../context/useAuth";
+import AccountsPage from "../features/accounts/AccountsPage";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
-import AccountsPage from "../pages/AccountsPage";
 import BudgetsPage from "../pages/BudgetsPage";
 import DashboardPage from "../pages/DashboardPage";
 import GoalsPage from "../pages/GoalsPage";
