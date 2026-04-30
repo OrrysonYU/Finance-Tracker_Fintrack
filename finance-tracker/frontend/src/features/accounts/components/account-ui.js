@@ -56,4 +56,3 @@ export function formatMoney(value, currency = "KES") {
 export function getAccountMeta(type) {
   return accountTypeMeta[type] ?? accountTypeMeta.OTHER;
 }
-

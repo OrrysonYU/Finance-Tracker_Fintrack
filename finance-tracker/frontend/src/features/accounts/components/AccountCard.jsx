@@ -65,4 +65,3 @@ export function AccountCard({ account, index, isDeleting, onDelete }) {
     </motion.article>
   );
 }
-

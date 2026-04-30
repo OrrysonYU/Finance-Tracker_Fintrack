@@ -26,4 +26,3 @@ export function AccountsErrorState({ onRetry }) {
     </section>
   );
 }
-

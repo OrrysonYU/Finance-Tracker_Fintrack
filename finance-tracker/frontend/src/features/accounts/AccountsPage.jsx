@@ -19,7 +19,6 @@ function getDeleteError(error) {
     "We could not delete this account. It may already be in use."
   );
 }
-
 export default function AccountsPage() {
   const queryClient = useQueryClient();
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -152,4 +151,3 @@ export default function AccountsPage() {
     </div>
   );
 }
-

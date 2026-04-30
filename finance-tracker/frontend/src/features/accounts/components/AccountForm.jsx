@@ -168,4 +168,3 @@ export function AccountForm({ isOpen, error, isSaving, onCancel, onSubmit }) {
     </form>
   );
 }
-
