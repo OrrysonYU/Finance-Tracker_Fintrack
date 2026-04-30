@@ -5,10 +5,10 @@ import { useAuth } from "../context/useAuth";
 import AccountsPage from "../features/accounts/AccountsPage";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
+import TransactionsPage from "../features/transactions/TransactionsPage";
 import BudgetsPage from "../pages/BudgetsPage";
 import DashboardPage from "../pages/DashboardPage";
 import GoalsPage from "../pages/GoalsPage";
-import TransactionsPage from "../pages/TransactionsPage";
 
 function FullPageState({ title, message }) {
   return (
