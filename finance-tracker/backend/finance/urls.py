@@ -1,13 +1,14 @@
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import AccountViewSet, TransactionViewSet, SavingGoalViewSet, CategoryViewSet
+
+from .views import AccountViewSet, CategoryViewSet, SavingGoalViewSet, TransactionViewSet
 
 router = DefaultRouter()
-router.register(r'accounts', AccountViewSet, basename='account')
-router.register(r'transactions', TransactionViewSet, basename='transaction')
-router.register(r'saving-goals', SavingGoalViewSet, basename='savinggoal')
-router.register(r'categories', CategoryViewSet, basename='category')
+router.register(r"accounts", AccountViewSet, basename="account")
+router.register(r"transactions", TransactionViewSet, basename="transaction")
+router.register(r"saving-goals", SavingGoalViewSet, basename="savinggoal")
+router.register(r"categories", CategoryViewSet, basename="category")
 
 urlpatterns = [
-    path('', include(router.urls)),
+    path("", include(router.urls)),
 ]
