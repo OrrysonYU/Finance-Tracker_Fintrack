@@ -2,13 +2,11 @@ from django.db.models import Q
 from django.http import JsonResponse
 from rest_framework import permissions, viewsets
 
-from finance.models import Category, SavingGoal
-from finance.serializers import (
-    CategorySerializer,
-    SavingGoalSerializer,
-)
+from finance.models import Category
+from finance.serializers import CategorySerializer
 
 from .account import AccountViewSet
+from .goal import SavingGoalViewSet
 from .transaction import TransactionViewSet
 
 
@@ -28,20 +26,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
             Q(user=self.request.user) | Q(user__isnull=True),
             is_active=True,
         )
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
-class SavingGoalViewSet(viewsets.ModelViewSet):
-    serializer_class = SavingGoalSerializer
-    permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ["deadline"]
-    search_fields = ["name"]
-    ordering_fields = ["target_amount", "current_amount", "deadline", "id"]
-
-    def get_queryset(self):
-        return SavingGoal.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

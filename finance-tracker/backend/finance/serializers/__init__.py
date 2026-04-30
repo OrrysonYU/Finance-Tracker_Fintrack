@@ -1,8 +1,9 @@
 from rest_framework import serializers
 
-from finance.models import Category, SavingGoal
+from finance.models import Category
 
 from .account import AccountSerializer
+from .goal import SavingGoalSerializer
 from .transaction import TransactionSerializer
 
 
@@ -20,13 +21,6 @@ class CategorySerializer(serializers.ModelSerializer):
             "is_active",
         ]
         read_only_fields = ["slug", "is_default"]
-
-
-class SavingGoalSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SavingGoal
-        fields = "__all__"
-        read_only_fields = ["user", "current_amount"]
 
 
 __all__ = [

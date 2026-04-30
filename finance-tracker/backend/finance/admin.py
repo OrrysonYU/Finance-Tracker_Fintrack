@@ -84,6 +84,18 @@ class TransactionAdmin(admin.ModelAdmin):
 
 @admin.register(SavingGoal)
 class SavingGoalAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "name", "target_amount", "current_amount", "deadline")
-    search_fields = ("name", "user__username")
-    ordering = ("deadline",)
+    list_display = (
+        "id",
+        "user",
+        "name",
+        "target_amount",
+        "current_amount",
+        "currency",
+        "progress_percent",
+        "is_completed",
+        "deadline",
+    )
+    list_filter = ("currency", "deadline")
+    search_fields = ("name", "description", "user__username", "user__email")
+    ordering = ("deadline", "name")
+    readonly_fields = ("created_at", "updated_at")

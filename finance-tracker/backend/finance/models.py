@@ -2,6 +2,7 @@ from decimal import Decimal
 from django.db import models
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db.models import Q
 from django.utils.text import slugify
@@ -132,21 +133,64 @@ class Transaction(models.Model):
 
 class SavingGoal(models.Model):
     """User can set saving goals for projects (vacation, emergency fund, etc.)"""
+
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="saving_goals")
     name = models.CharField(max_length=120)
-    target_amount = models.DecimalField(max_digits=12, decimal_places=2)
-    current_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    description = models.TextField(blank=True, default="")
+    currency = models.CharField(max_length=3, default="KES")
+    target_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        validators=[MinValueValidator(Decimal("0.01"))],
+    )
+    current_amount = models.DecimalField(
+        max_digits=12,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(Decimal("0.00"))],
+    )
     deadline = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["deadline", "name"]
+        indexes = [
+            models.Index(fields=["user", "deadline"], name="goal_user_deadline_idx"),
+        ]
 
     @property
     def progress(self):
-        if self.target_amount > 0:
-            return round((self.current_amount / self.target_amount) * 100, 2)
-        return 0
+        return self.progress_percent
+
+    @property
+    def progress_percent(self):
+        if self.target_amount <= 0:
+            return Decimal("0.00")
+        percent = (self.current_amount / self.target_amount) * Decimal("100")
+        return min(percent, Decimal("100.00")).quantize(Decimal("0.01"))
+
+    @property
+    def remaining_amount(self):
+        return max(self.target_amount - self.current_amount, Decimal("0.00"))
+
+    @property
+    def is_completed(self):
+        return self.current_amount >= self.target_amount
+
+    def clean(self):
+        if self.current_amount > self.target_amount:
+            raise ValidationError(
+                {"current_amount": "Current amount cannot exceed target amount."}
+            )
+
+    def save(self, *args, **kwargs):
+        self.name = self.name.strip()
+        self.currency = self.currency.strip().upper()
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.user} • {self.name} ({self.progress}%)"
+        return f"{self.user} • {self.name} ({self.progress_percent}%)"
 
 
 class Investment(models.Model):
