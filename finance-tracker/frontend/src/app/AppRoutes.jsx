@@ -5,9 +5,9 @@ import { useAuth } from "../context/useAuth";
 import AccountsPage from "../features/accounts/AccountsPage";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
+import BudgetsPage from "../features/budgets/BudgetsPage";
 import GoalsPage from "../features/goals/GoalsPage";
 import TransactionsPage from "../features/transactions/TransactionsPage";
-import BudgetsPage from "../pages/BudgetsPage";
 import DashboardPage from "../pages/DashboardPage";
 
 function FullPageState({ title, message }) {
