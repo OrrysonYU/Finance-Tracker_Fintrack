@@ -4,6 +4,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework import permissions, response, status
 
 from reports.services.category_spend import calculate_category_spend
+from reports.services.dashboard_overview import calculate_dashboard_overview
 from reports.services.monthly_summary import calculate_monthly_summary
 
 
@@ -49,6 +50,17 @@ def category_spend(request):
         return error_response
 
     return response.Response(calculate_category_spend(request.user, anchor_date))
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def dashboard_overview(request):
+    """Return one stable payload for the dashboard landing page."""
+    anchor_date, error_response = _period_from_query(request)
+    if error_response:
+        return error_response
+
+    return response.Response(calculate_dashboard_overview(request.user, anchor_date))
 
 
 by_category = category_spend

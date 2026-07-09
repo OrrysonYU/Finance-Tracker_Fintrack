@@ -7,7 +7,8 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from finance.models import Account, Category
+from budgets.models import Budget, BudgetItem
+from finance.models import Account, Category, SavingGoal
 from finance.services import balance_service
 from finance.tests import FAST_PASSWORD_HASHERS
 
@@ -169,3 +170,55 @@ class ReportApiTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(self.amount(response.data["total"]), Decimal("25.00"))
+
+    def test_dashboard_overview_combines_dashboard_data(self):
+        self.account.opening_balance = Decimal("100.00")
+        self.account.save(update_fields=["opening_balance"])
+        balance_service.sync_account_balance(self.account)
+        self.create_transaction(
+            category=self.salary,
+            amount=Decimal("500.00"),
+            is_credit=True,
+            timestamp=self.current_month,
+        )
+        self.create_transaction(
+            category=self.groceries,
+            amount=Decimal("120.00"),
+            is_credit=False,
+            timestamp=self.current_month,
+        )
+        SavingGoal.objects.create(
+            user=self.user,
+            name="Emergency Fund",
+            currency="KES",
+            target_amount=Decimal("500.00"),
+            current_amount=Decimal("200.00"),
+        )
+        budget = Budget.objects.create(
+            user=self.user,
+            name="Monthly Essentials",
+            period=Budget.Period.MONTH,
+        )
+        BudgetItem.objects.create(
+            budget=budget,
+            category=self.groceries,
+            limit_amount=Decimal("100.00"),
+        )
+
+        self.client.force_authenticate(self.user)
+        response = self.client.get("/api/reports/dashboard-overview/")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(self.amount(response.data["summary"]["income"]), Decimal("500.00"))
+        self.assertEqual(self.amount(response.data["summary"]["expense"]), Decimal("120.00"))
+        self.assertEqual(
+            self.amount(response.data["accounts"]["total_balance"]),
+            Decimal("480.00"),
+        )
+        self.assertEqual(response.data["goals"]["count"], 1)
+        self.assertEqual(response.data["budgets"]["active_count"], 1)
+        self.assertEqual(response.data["budgets"]["over_budget_count"], 1)
+        self.assertEqual(
+            self.amount(response.data["category_spend"]["by_category"]["Groceries"]),
+            Decimal("120.00"),
+        )
