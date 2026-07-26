@@ -6,9 +6,9 @@ import AccountsPage from "../features/accounts/AccountsPage";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
 import BudgetsPage from "../features/budgets/BudgetsPage";
+import DashboardPage from "../features/dashboard/DashboardPage";
 import GoalsPage from "../features/goals/GoalsPage";
 import TransactionsPage from "../features/transactions/TransactionsPage";
-import DashboardPage from "../pages/DashboardPage";
 
 function FullPageState({ title, message }) {
   return (
