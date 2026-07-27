@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "finance",
     "budgets",
     "reports",
+    "apps.ai_insights.apps.AIInsightsConfig",
 ]
 
 
@@ -128,6 +129,11 @@ REST_FRAMEWORK = {
 
 
 CORS_ALLOW_ALL_ORIGINS = env_bool("DJANGO_CORS_ALLOW_ALL_ORIGINS", False)
+
+
+# AI implementations remain optional and isolated from core finance flows.
+AI_INSIGHTS_ENABLED = env_bool("AI_INSIGHTS_ENABLED", False)
+AI_INSIGHTS_PROVIDER = env("AI_INSIGHTS_PROVIDER", "placeholder")
 
 
 SIMPLE_JWT = {
