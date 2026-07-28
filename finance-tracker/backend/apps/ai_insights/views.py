@@ -9,6 +9,13 @@ from rest_framework.decorators import api_view, permission_classes
 from budgets.models import Budget
 
 from .services import AIServiceConfigurationError, get_ai_insights_service
+from .services.anomaly_detector import (
+    DEFAULT_ANOMALY_LIMIT,
+    DEFAULT_LOOKBACK_DAYS,
+    MAX_ANOMALY_LIMIT,
+    MAX_LOOKBACK_DAYS,
+    detect_anomalies,
+)
 from .services.budget_forecast import calculate_budget_forecast
 from .services.category_suggester import suggest_category
 from .services.spending_insights import (
@@ -59,6 +66,20 @@ def _as_of_from_query(request):
             {"as_of": ["Use a valid date in YYYY-MM-DD format."]},
             status=status.HTTP_400_BAD_REQUEST,
         )
+
+
+def _bounded_int_from_query(request, name, default, maximum):
+    raw_value = request.query_params.get(name, default)
+    try:
+        value = int(raw_value)
+    except (TypeError, ValueError):
+        value = 0
+    if not 1 <= value <= maximum:
+        return None, response.Response(
+            {name: [f"Use a whole number between 1 and {maximum}."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    return value, None
 
 
 @api_view(["GET"])
@@ -188,3 +209,43 @@ def budget_forecast(request, budget_id):
         user=request.user,
     )
     return response.Response(calculate_budget_forecast(budget, as_of=as_of))
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def transaction_anomalies(request):
+    """Return unusually large expense transactions for review."""
+
+    if not settings.AI_INSIGHTS_ENABLED:
+        return _disabled_response()
+
+    as_of, error_response = _as_of_from_query(request)
+    if error_response:
+        return error_response
+
+    days, error_response = _bounded_int_from_query(
+        request,
+        "days",
+        DEFAULT_LOOKBACK_DAYS,
+        MAX_LOOKBACK_DAYS,
+    )
+    if error_response:
+        return error_response
+
+    limit, error_response = _bounded_int_from_query(
+        request,
+        "limit",
+        DEFAULT_ANOMALY_LIMIT,
+        MAX_ANOMALY_LIMIT,
+    )
+    if error_response:
+        return error_response
+
+    return response.Response(
+        detect_anomalies(
+            request.user,
+            as_of=as_of,
+            days=days,
+            limit=limit,
+        )
+    )
