@@ -8,6 +8,11 @@ import {
   Wallet,
 } from "lucide-react";
 
+import {
+  AI_INSIGHTS_QUERY_KEY,
+  aiInsightsApi,
+} from "../ai-insights/api";
+import { AiInsightsPanel } from "../ai-insights/AiInsightsPanel";
 import { DASHBOARD_QUERY_KEY, dashboardApi } from "./api";
 import { CashFlowChart } from "./components/CashFlowChart";
 import { DashboardEmptyState } from "./components/DashboardEmptyState";
@@ -35,6 +40,26 @@ export default function DashboardPage() {
     queryKey: DASHBOARD_QUERY_KEY,
     queryFn: dashboardApi.getOverview,
   });
+  const budgetIds = (overview?.budgets?.highlights ?? []).map(
+    (budget) => budget.id
+  );
+  const {
+    data: aiData,
+    isFetching: isAiFetching,
+    isLoading: isAiLoading,
+    refetch: refetchAi,
+  } = useQuery({
+    queryKey: [...AI_INSIGHTS_QUERY_KEY, budgetIds],
+    queryFn: () => aiInsightsApi.getDashboardData({ budgetIds }),
+    enabled: Boolean(overview),
+    retry: false,
+    staleTime: 60_000,
+  });
+
+  function refreshDashboard() {
+    refetch();
+    if (overview) refetchAi();
+  }
 
   if (isLoading) {
     return <DashboardSkeleton />;
@@ -83,7 +108,7 @@ export default function DashboardPage() {
           )}
           <button
             type="button"
-            onClick={() => refetch()}
+            onClick={refreshDashboard}
             disabled={isFetching}
             className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-wait disabled:opacity-60"
           >
@@ -147,6 +172,13 @@ export default function DashboardPage() {
           />
         </>
       )}
+
+      <AiInsightsPanel
+        data={aiData}
+        isLoading={isAiLoading}
+        isFetching={isAiFetching}
+        onRetry={() => refetchAi()}
+      />
     </div>
   );
 }

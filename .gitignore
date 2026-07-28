@@ -14,3 +14,9 @@ finance-tracker/backend/*.sqlite3-journal
 
 # Frontend dependencies
 node_modules/
+
+# Offline ML data and generated artifacts
+finance-tracker/ml/.venv/
+finance-tracker/ml/private-exports/
+finance-tracker/ml/artifacts/
+finance-tracker/**/*.jsonl
