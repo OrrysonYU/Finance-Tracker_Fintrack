@@ -1,11 +1,21 @@
 from collections.abc import Mapping
+from datetime import date
 
 from django.conf import settings
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions, response, status
 from rest_framework.decorators import api_view, permission_classes
 
+from budgets.models import Budget
+
 from .services import AIServiceConfigurationError, get_ai_insights_service
+from .services.budget_forecast import calculate_budget_forecast
 from .services.category_suggester import suggest_category
+from .services.spending_insights import (
+    DEFAULT_INSIGHT_LIMIT,
+    MAX_INSIGHT_LIMIT,
+    generate_spending_insights,
+)
 
 
 def _disabled_response():
@@ -17,6 +27,38 @@ def _disabled_response():
         },
         status=status.HTTP_503_SERVICE_UNAVAILABLE,
     )
+
+
+def _month_from_query(request):
+    year = request.query_params.get("year")
+    month = request.query_params.get("month")
+    if year is None and month is None:
+        return None, None
+    if not year or not month:
+        return None, response.Response(
+            {"detail": "Provide both year and month, or neither."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    try:
+        return date(int(year), int(month), 1), None
+    except (TypeError, ValueError):
+        return None, response.Response(
+            {"detail": "Year and month must form a valid calendar month."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+
+def _as_of_from_query(request):
+    value = request.query_params.get("as_of")
+    if value is None:
+        return None, None
+    try:
+        return date.fromisoformat(value), None
+    except (TypeError, ValueError):
+        return None, response.Response(
+            {"as_of": ["Use a valid date in YYYY-MM-DD format."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
 
 @api_view(["GET"])
@@ -98,3 +140,51 @@ def category_suggestion(request):
         )
 
     return response.Response({"suggestion": suggestion.as_dict()})
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def spending_insights(request):
+    """Return explainable observations for a calendar month."""
+
+    if not settings.AI_INSIGHTS_ENABLED:
+        return _disabled_response()
+
+    anchor_date, error_response = _month_from_query(request)
+    if error_response:
+        return error_response
+
+    raw_limit = request.query_params.get("limit", DEFAULT_INSIGHT_LIMIT)
+    try:
+        limit = int(raw_limit)
+    except (TypeError, ValueError):
+        limit = 0
+    if not 1 <= limit <= MAX_INSIGHT_LIMIT:
+        return response.Response(
+            {"limit": [f"Use a whole number between 1 and {MAX_INSIGHT_LIMIT}."]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return response.Response(
+        generate_spending_insights(request.user, anchor_date=anchor_date, limit=limit)
+    )
+
+
+@api_view(["GET"])
+@permission_classes([permissions.IsAuthenticated])
+def budget_forecast(request, budget_id):
+    """Return a run-rate forecast for one of the authenticated user's budgets."""
+
+    if not settings.AI_INSIGHTS_ENABLED:
+        return _disabled_response()
+
+    as_of, error_response = _as_of_from_query(request)
+    if error_response:
+        return error_response
+
+    budget = get_object_or_404(
+        Budget.objects.all(),
+        id=budget_id,
+        user=request.user,
+    )
+    return response.Response(calculate_budget_forecast(budget, as_of=as_of))
