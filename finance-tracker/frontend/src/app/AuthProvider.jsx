@@ -44,8 +44,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handleSessionExpired = () => {
+      authApi.logout();
       setUser(null);
       setSessionError("Your session expired. Please sign in again.");
+      setLoading(false);
     };
 
     window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, handleSessionExpired);
@@ -58,17 +60,27 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (username, password) => {
+    setLoading(true);
     setSessionError("");
-    const data = await authApi.login({ username, password });
-    setUser(data.user);
-    return data;
+    try {
+      const data = await authApi.login({ username, password });
+      setUser(data.user);
+      return data;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const register = async (username, email, password) => {
+    setLoading(true);
     setSessionError("");
-    const data = await authApi.register({ username, email, password });
-    setUser(data.user);
-    return data;
+    try {
+      const data = await authApi.register({ username, email, password });
+      setUser(data.user);
+      return data;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const logout = () => {

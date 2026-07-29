@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
-import Layout from "../components/Layout";
+import { AppShell } from "../components/layout";
+import { StateMessage } from "../components/ui";
 import { useAuth } from "../context/useAuth";
 import AccountsPage from "../features/accounts/AccountsPage";
 import LoginPage from "../features/auth/LoginPage";
@@ -12,14 +13,9 @@ import TransactionsPage from "../features/transactions/TransactionsPage";
 
 function FullPageState({ title, message }) {
   return (
-    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-foreground)] flex items-center justify-center px-6">
-      <div className="glass w-full max-w-sm rounded-2xl p-8 text-center shadow-2xl">
-        <div className="mx-auto mb-5 h-12 w-12 rounded-full border-4 border-[var(--color-primary)] border-t-transparent animate-spin" />
-        <h1 className="text-lg font-semibold">{title}</h1>
-        {message && (
-          <p className="mt-2 text-sm text-[var(--color-muted)]">{message}</p>
-        )}
-      </div>
+    <div className="route-loading">
+      <div className="route-loading__brand" aria-hidden="true">F</div>
+      <StateMessage state="loading" title={title} description={message} />
     </div>
   );
 }
@@ -88,7 +84,7 @@ export function AppRoutes() {
         path="/"
         element={
           <PrivateRoute>
-            <Layout />
+            <AppShell />
           </PrivateRoute>
         }
       >

@@ -1,0 +1,121 @@
+/*
+ * Fintrack design tokens
+ *
+ * Keep raw values here and consume semantic roles in components. This makes
+ * the light theme explicit today and leaves a clean mapping point for the
+ * future dark theme without scattering colors through feature code.
+ */
+:root {
+  color-scheme: light;
+
+  /* Color foundations */
+  --color-white: #ffffff;
+  --color-canvas: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-subtle: #f7f8fa;
+  --color-surface-muted: #f1f3f6;
+  --color-surface-raised: #ffffff;
+  --color-border-subtle: #edf0f3;
+  --color-border-default: #e2e6ec;
+  --color-border-strong: #c7ced8;
+  --color-text-primary: #172033;
+  --color-text-secondary: #526071;
+  --color-text-muted: #6f7c8d;
+  --color-text-inverse: #ffffff;
+
+  /* Brand and semantic roles */
+  --color-accent: #2563eb;
+  --color-accent-hover: #1d4ed8;
+  --color-accent-soft: #eff6ff;
+  --color-accent-contrast: #ffffff;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #b45309;
+  --color-warning-soft: #fffbeb;
+  --color-danger: #b42318;
+  --color-danger-soft: #fef2f2;
+  --color-info: #1d4ed8;
+  --color-info-soft: #eff6ff;
+  --color-focus-ring: #2563eb;
+
+  /* Legacy aliases keep the current Tailwind screens readable during migration. */
+  --color-background: var(--color-canvas);
+  --color-foreground: var(--color-text-primary);
+  --color-primary: var(--color-accent);
+  --color-primary-hover: var(--color-accent-hover);
+  --color-accent-legacy: var(--color-accent);
+  --color-card: var(--color-surface);
+  --color-card-hover: var(--color-surface-muted);
+  --color-muted: var(--color-text-muted);
+  --color-border: var(--color-border-default);
+  --color-danger-legacy: var(--color-danger);
+  --color-sidebar: var(--color-text-primary);
+
+  /* Typography */
+  --font-family-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-family-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --font-size-body: 0.875rem;
+  --line-height-body: 1.5714;
+  --font-size-small: 0.75rem;
+  --line-height-small: 1.5;
+  --font-size-control: 0.875rem;
+  --line-height-control: 1.4286;
+  --font-size-card-title: 1rem;
+  --line-height-card-title: 1.5;
+  --font-size-section-title: 1.25rem;
+  --line-height-section-title: 1.4;
+  --font-size-page-title: 1.75rem;
+  --line-height-page-title: 1.2857;
+  --font-size-display: 2rem;
+  --line-height-display: 1.25;
+
+  /* Four-pixel spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Geometry */
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-dialog: 1rem;
+  --radius-pill: 9999px;
+  --border-width-default: 1px;
+
+  /* Deliberately quiet elevation */
+  --shadow-none: 0 0 #0000;
+  --shadow-subtle: 0 1px 2px rgb(23 32 51 / 0.04);
+  --shadow-popover: 0 8px 24px rgb(23 32 51 / 0.12), 0 2px 6px rgb(23 32 51 / 0.06);
+  --shadow-dialog: 0 20px 48px rgb(23 32 51 / 0.16), 0 4px 12px rgb(23 32 51 / 0.08);
+
+  /* Motion */
+  --duration-fast: 140ms;
+  --duration-standard: 200ms;
+  --duration-slow: 260ms;
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Layout */
+  --layout-content-max: 90rem;
+  --layout-reading-max: 48rem;
+  --layout-page-padding: var(--space-8);
+  --layout-page-padding-tablet: var(--space-6);
+  --layout-page-padding-mobile: var(--space-4);
+  --layout-grid-gutter: var(--space-6);
+  --layout-grid-gutter-mobile: var(--space-4);
+
+  /* Chart roles: primary blue first, neutral context second, semantics last. */
+  --chart-primary: #2563eb;
+  --chart-secondary: #64748b;
+  --chart-tertiary: #0f766e;
+  --chart-quaternary: #b45309;
+  --chart-positive: #15803d;
+  --chart-negative: #b42318;
+  --chart-grid: #e2e6ec;
+  --chart-axis: #6f7c8d;
+}
