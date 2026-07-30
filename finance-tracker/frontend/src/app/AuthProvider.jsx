@@ -60,27 +60,17 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (username, password) => {
-    setLoading(true);
     setSessionError("");
-    try {
-      const data = await authApi.login({ username, password });
-      setUser(data.user);
-      return data;
-    } finally {
-      setLoading(false);
-    }
+    const data = await authApi.login({ username, password });
+    setUser(data.user);
+    return data;
   };
 
   const register = async (username, email, password) => {
-    setLoading(true);
     setSessionError("");
-    try {
-      const data = await authApi.register({ username, email, password });
-      setUser(data.user);
-      return data;
-    } finally {
-      setLoading(false);
-    }
+    const data = await authApi.register({ username, email, password });
+    setUser(data.user);
+    return data;
   };
 
   const logout = () => {

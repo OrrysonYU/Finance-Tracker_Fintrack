@@ -4,6 +4,7 @@ import { AppShell } from "../components/layout";
 import { StateMessage } from "../components/ui";
 import { useAuth } from "../context/useAuth";
 import AccountsPage from "../features/accounts/AccountsPage";
+import { AuthPageSkeleton } from "../features/auth/components/AuthPageSkeleton";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
 import BudgetsPage from "../features/budgets/BudgetsPage";
@@ -46,12 +47,7 @@ function PublicRoute({ children }) {
   const redirectTo = location.state?.from?.pathname || "/";
 
   if (loading) {
-    return (
-      <FullPageState
-        title="Preparing FinTrack"
-        message="Loading your authentication state."
-      />
-    );
+    return <AuthPageSkeleton />;
   }
 
   if (user) {

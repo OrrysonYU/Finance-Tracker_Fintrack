@@ -1,181 +1,147 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import { ArrowRight, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import { Eye, EyeOff, LogIn, ShieldCheck } from "lucide-react";
 
+import { Alert, Button, PasswordField, TextField } from "../../components/ui";
 import { useAuth } from "../../context/useAuth";
+import { getLoginError } from "./auth-errors";
+import { AuthLayout } from "./components/AuthLayout";
+import {
+  hasValidationErrors,
+  validateLogin,
+} from "./validation";
 
-function getErrorMessage(error) {
-  return (
-    error.response?.data?.detail ||
-    error.response?.data?.non_field_errors?.join(" ") ||
-    "We could not sign you in. Check your username and password."
-  );
-}
+const storyPoints = [
+  {
+    title: "One clear financial view",
+    description: "Return to your accounts, budgets, goals, and insights in one workspace.",
+  },
+  {
+    title: "Designed for confident decisions",
+    description: "Calm hierarchy keeps your most important financial context easy to scan.",
+  },
+  {
+    title: "Secure session handling",
+    description: "Your protected workspace is restored only when your session is valid.",
+  },
+];
+
+const initialForm = { username: "", password: "" };
 
 export default function LoginPage() {
   const { login, sessionError } = useAuth();
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
+  const fieldRefs = useRef({});
+  const [form, setForm] = useState(initialForm);
+  const [touched, setTouched] = useState({});
+  const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const validation = validateLogin(form);
+  const visibleError = formError || sessionError;
 
-  const visibleError = error || sessionError;
+  const fieldError = (name) => (touched[name] ? validation[name] : "");
+
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+    setForm((current) => ({ ...current, [name]: value }));
+    setFormError("");
+  };
+
+  const handleBlur = (event) => {
+    setTouched((current) => ({ ...current, [event.target.name]: true }));
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setError("");
-    setLoading(true);
+    const errors = validateLogin(form);
+    setTouched({ password: true, username: true });
+    setFormError("");
 
+    if (hasValidationErrors(errors)) {
+      const firstInvalid = ["username", "password"].find((name) => errors[name]);
+      fieldRefs.current[firstInvalid]?.focus();
+      return;
+    }
+
+    setLoading(true);
     try {
-      await login(username.trim(), password);
-    } catch (err) {
-      setError(getErrorMessage(err));
+      await login(form.username.trim(), form.password);
+    } catch (error) {
+      setFormError(getLoginError(error));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[var(--color-background)] text-[var(--color-foreground)]">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-blue-600/20 blur-[110px]" />
-        <div className="absolute bottom-0 right-0 h-96 w-96 rounded-full bg-yellow-400/10 blur-[120px]" />
-      </div>
+    <AuthLayout
+      eyebrow="Welcome back"
+      title="Sign in to Fintrack"
+      description="Enter your account details to continue to your financial workspace."
+      asideTitle="Your financial life, organized with clarity."
+      asideDescription="Fintrack brings the information behind your everyday money decisions into one calm, dependable workspace."
+      points={storyPoints}
+      footer={
+        <p>
+          New to Fintrack? <Link to="/register">Create an account</Link>
+        </p>
+      }
+    >
+      <AnimatePresence initial={false}>
+        {visibleError && (
+          <Alert key={visibleError} tone="error" title="Sign-in unsuccessful">
+            {visibleError}
+          </Alert>
+        )}
+      </AnimatePresence>
 
-      <section className="relative mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-5 py-10 lg:grid-cols-[1fr_440px] lg:px-8">
-        <div className="hidden lg:block">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-4 py-2 text-sm text-blue-100">
-            <ShieldCheck size={16} />
-            Secure personal finance workspace
-          </p>
-          <h1 className="max-w-2xl text-5xl font-semibold tracking-tight">
-            Sign in to keep every account, budget, and goal moving in sync.
-          </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-[var(--color-muted)]">
-            FinTrack keeps authentication separate from the finance modules so
-            your dashboard can grow safely into insights, predictions, and
-            automation.
-          </p>
-        </div>
+      <form className="auth-form" onSubmit={handleSubmit} noValidate>
+        <TextField
+          ref={(element) => {
+            fieldRefs.current.username = element;
+          }}
+          id="login-username"
+          name="username"
+          label="Username"
+          leadingIcon={UserRound}
+          value={form.username}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldError("username")}
+          autoComplete="username"
+          placeholder="Enter your username"
+          required
+          disabled={loading}
+        />
 
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45 }}
-          className="glass relative rounded-3xl p-6 shadow-2xl sm:p-8"
+        <PasswordField
+          ref={(element) => {
+            fieldRefs.current.password = element;
+          }}
+          id="login-password"
+          name="password"
+          label="Password"
+          value={form.password}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={fieldError("password")}
+          autoComplete="current-password"
+          placeholder="Enter your password"
+          required
+          disabled={loading}
+        />
+
+        <Button
+          id="login-submit"
+          className="auth-submit"
+          type="submit"
+          size="lg"
+          loading={loading}
         >
-          <div className="mb-8">
-            <div className="mb-5 flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-yellow-300 text-lg font-bold text-white shadow-lg">
-                F
-              </div>
-              <div>
-                <p className="text-sm text-[var(--color-muted)]">
-                  Welcome back
-                </p>
-                <h2 className="text-2xl font-semibold">Sign in to FinTrack</h2>
-              </div>
-            </div>
-            <p className="text-sm leading-6 text-[var(--color-muted)]">
-              Use your account credentials to continue to your protected
-              finance dashboard.
-            </p>
-          </div>
-
-          {visibleError && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              role="alert"
-              aria-live="polite"
-              className="mb-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200"
-            >
-              {visibleError}
-            </motion.div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label
-                htmlFor="login-username"
-                className="mb-2 block text-sm font-medium text-[var(--color-muted)]"
-              >
-                Username
-              </label>
-              <input
-                id="login-username"
-                type="text"
-                value={username}
-                onChange={(event) => setUsername(event.target.value)}
-                autoComplete="username"
-                required
-                className="w-full rounded-2xl border border-[var(--color-border)] bg-black/30 px-4 py-3 text-white outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-blue-500/25"
-                placeholder="Enter your username"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="login-password"
-                className="mb-2 block text-sm font-medium text-[var(--color-muted)]"
-              >
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  autoComplete="current-password"
-                  required
-                  className="w-full rounded-2xl border border-[var(--color-border)] bg-black/30 px-4 py-3 pr-12 text-white outline-none transition focus:border-[var(--color-primary)] focus:ring-2 focus:ring-blue-500/25"
-                  placeholder="Enter your password"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((value) => !value)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-[var(--color-muted)] transition hover:bg-white/10 hover:text-white"
-                >
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </button>
-              </div>
-            </div>
-
-            <button
-              id="login-submit"
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-400 px-4 py-3 font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-500 hover:to-yellow-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {loading ? (
-                <>
-                  <span className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <LogIn size={18} />
-                  Sign In
-                </>
-              )}
-            </button>
-          </form>
-
-          <p className="mt-6 text-center text-sm text-[var(--color-muted)]">
-            New to FinTrack?{" "}
-            <Link
-              to="/register"
-              className="font-semibold text-[var(--color-primary)] hover:underline"
-            >
-              Create an account
-            </Link>
-          </p>
-        </motion.div>
-      </section>
-    </main>
+          {loading ? "Signing in…" : "Sign in"}
+          {!loading && <ArrowRight size={18} aria-hidden="true" />}
+        </Button>
+      </form>
+    </AuthLayout>
   );
 }
