@@ -5,6 +5,8 @@ export { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 export { Field } from "./Field";
 export { Input, Select, Textarea } from "./Input";
 export { PasswordField } from "./PasswordField";
+export { ProgressBar } from "./ProgressBar";
+export { SectionHeader } from "./SectionHeader";
 export { Skeleton, SkeletonGroup } from "./Skeleton";
 export { StateMessage } from "./StateMessage";
 export { TextField } from "./TextField";

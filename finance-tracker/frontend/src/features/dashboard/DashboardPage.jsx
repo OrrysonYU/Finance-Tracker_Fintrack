@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowDownRight,
   ArrowUpRight,
   RefreshCcw,
-  Scale,
+  TrendingUp,
   Wallet,
 } from "lucide-react";
 
@@ -13,13 +13,20 @@ import {
   aiInsightsApi,
 } from "../ai-insights/api";
 import { AiInsightsPanel } from "../ai-insights/AiInsightsPanel";
-import { DASHBOARD_QUERY_KEY, dashboardApi } from "./api";
+import { transactionsApi } from "../transactions/api";
+import {
+  DASHBOARD_QUERY_KEY,
+  DASHBOARD_TREND_QUERY_KEY,
+  dashboardApi,
+} from "./api";
 import { CashFlowChart } from "./components/CashFlowChart";
 import { DashboardEmptyState } from "./components/DashboardEmptyState";
 import { DashboardErrorState } from "./components/DashboardErrorState";
 import { DashboardHighlights } from "./components/DashboardHighlights";
 import { DashboardKpiCard } from "./components/DashboardKpiCard";
 import { DashboardSkeleton } from "./components/DashboardSkeleton";
+import { FinancialHealthCard } from "./components/FinancialHealthCard";
+import { RecentTransactionsCard } from "./components/RecentTransactionsCard";
 import { SpendingByCategoryChart } from "./components/SpendingByCategoryChart";
 import {
   formatGeneratedAt,
@@ -29,7 +36,10 @@ import {
   hasDashboardData,
 } from "./components/dashboard-ui";
 
+const RECENT_TRANSACTIONS_QUERY_KEY = ["dashboard-recent-transactions"];
+
 export default function DashboardPage() {
+  const reduceMotion = useReducedMotion();
   const {
     data: overview,
     error,
@@ -40,6 +50,28 @@ export default function DashboardPage() {
     queryKey: DASHBOARD_QUERY_KEY,
     queryFn: dashboardApi.getOverview,
   });
+  const {
+    data: trend = [],
+    error: trendError,
+    isFetching: isTrendFetching,
+    refetch: refetchTrend,
+  } = useQuery({
+    queryKey: DASHBOARD_TREND_QUERY_KEY,
+    queryFn: () => dashboardApi.getMonthlyTrend({ months: 6 }),
+    staleTime: 60_000,
+  });
+  const {
+    data: recentTransactions = [],
+    error: transactionsError,
+    isFetching: isTransactionsFetching,
+    refetch: refetchTransactions,
+  } = useQuery({
+    queryKey: RECENT_TRANSACTIONS_QUERY_KEY,
+    queryFn: () =>
+      transactionsApi.list({ ordering: "-timestamp", page_size: 5 }),
+    staleTime: 30_000,
+  });
+
   const budgetIds = (overview?.budgets?.highlights ?? []).map(
     (budget) => budget.id
   );
@@ -58,6 +90,8 @@ export default function DashboardPage() {
 
   function refreshDashboard() {
     refetch();
+    refetchTrend();
+    refetchTransactions();
     if (overview) refetchAi();
   }
 
@@ -80,40 +114,43 @@ export default function DashboardPage() {
   const transactionCount = overview?.summary?.transaction_count ?? 0;
   const accountCount = overview?.accounts?.count ?? 0;
   const net = Number(overview?.summary?.net || 0);
+  const isRefreshing =
+    isFetching || isTrendFetching || isTransactionsFetching || isAiFetching;
 
   return (
-    <div className="space-y-8">
+    <div className="dashboard-page">
       <motion.header
-        initial={{ opacity: 0, y: -12 }}
+        initial={reduceMotion ? false : { opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between"
+        transition={{ duration: 0.24 }}
+        className="dashboard-page__header"
       >
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.28em] text-blue-200/80">
-            Financial overview
-          </p>
-          <h1 className="mt-3 text-3xl font-bold tracking-tight text-white md:text-4xl">
-            Dashboard
-          </h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--color-muted)]">
-            A single view of your cash flow, balances, saving goals, and active
-            budget signals for {period}.
+        <div className="dashboard-page__heading">
+          <p className="dashboard-page__eyebrow">Financial command center</p>
+          <h1>Dashboard</h1>
+          <p>
+            Your balances, cash flow, budgets, and savings progress for {period}
+            - organized around the decisions that matter most.
           </p>
         </div>
-        <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+        <div className="dashboard-page__actions">
           {generatedAt && (
-            <p className="text-xs text-[var(--color-muted)]">
+            <p className="dashboard-page__updated" aria-live="polite">
               Updated {generatedAt}
             </p>
           )}
           <button
             type="button"
             onClick={refreshDashboard}
-            disabled={isFetching}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-wait disabled:opacity-60"
+            disabled={isRefreshing}
+            className="ui-button ui-button--secondary ui-button--md dashboard-page__refresh"
           >
-            <RefreshCcw size={16} className={isFetching ? "animate-spin" : ""} />
-            {isFetching ? "Refreshing" : "Refresh"}
+            <RefreshCcw
+              size={16}
+              className={isRefreshing ? "animate-spin" : ""}
+              aria-hidden="true"
+            />
+            {isRefreshing ? "Refreshing" : "Refresh data"}
           </button>
         </div>
       </motion.header>
@@ -122,46 +159,71 @@ export default function DashboardPage() {
         <DashboardEmptyState />
       ) : (
         <>
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <section className="dashboard-kpi-grid" aria-label="Financial summary">
+            <DashboardKpiCard
+              icon={Wallet}
+              label="Total balance"
+              value={formatMoney(overview.accounts.total_balance, currency)}
+              detail={accountCount + " connected " + (accountCount === 1 ? "account" : "accounts")}
+              tone="accent"
+              index={0}
+            />
             <DashboardKpiCard
               icon={ArrowUpRight}
               label="Monthly income"
               value={formatMoney(overview.summary.income, currency)}
-              detail={`${transactionCount} transaction${transactionCount === 1 ? "" : "s"} in ${period}`}
-              tone="bg-emerald-500/15 text-emerald-300"
-              index={0}
+              detail={transactionCount + " " + (transactionCount === 1 ? "transaction" : "transactions") + " in " + period}
+              tone="success"
+              index={1}
             />
             <DashboardKpiCard
               icon={ArrowDownRight}
               label="Monthly expenses"
               value={formatMoney(overview.summary.expense, currency)}
-              detail={`${formatMoney(overview.category_spend.total, currency)} categorized this month`}
-              tone="bg-red-500/15 text-red-300"
-              index={1}
-            />
-            <DashboardKpiCard
-              icon={Scale}
-              label="Monthly net"
-              value={`${net > 0 ? "+" : ""}${formatMoney(net, currency)}`}
-              detail={net >= 0 ? "Income is covering monthly expenses" : "Expenses exceed income this month"}
-              tone={net >= 0 ? "bg-blue-500/15 text-blue-300" : "bg-amber-500/15 text-amber-300"}
+              detail={formatMoney(overview.category_spend.total, currency) + " categorized this month"}
+              tone="danger"
               index={2}
             />
             <DashboardKpiCard
-              icon={Wallet}
-              label="Total balance"
-              value={formatMoney(overview.accounts.total_balance, currency)}
-              detail={`${accountCount} account${accountCount === 1 ? "" : "s"} connected`}
-              tone="bg-violet-500/15 text-violet-300"
+              icon={TrendingUp}
+              label="Net cash flow"
+              value={(net > 0 ? "+" : "") + formatMoney(net, currency)}
+              detail={net >= 0 ? "Income is covering monthly expenses" : "Expenses exceed income this month"}
+              tone={net >= 0 ? "accent" : "warning"}
               index={3}
             />
           </section>
 
-          <section className="grid gap-5 xl:grid-cols-2">
-            <CashFlowChart summary={overview.summary} currency={currency} />
+          <section className="dashboard-primary-grid">
+            <CashFlowChart
+              trend={trend}
+              summary={overview.summary}
+              currency={currency}
+              error={trendError}
+              isLoading={isTrendFetching && trend.length === 0}
+              onRetry={() => refetchTrend()}
+            />
+            <FinancialHealthCard
+              summary={overview.summary}
+              budgets={overview.budgets}
+              goals={overview.goals}
+              currency={currency}
+            />
+          </section>
+
+          <section className="dashboard-secondary-grid">
             <SpendingByCategoryChart
               categorySpend={overview.category_spend}
               currency={currency}
+            />
+            <RecentTransactionsCard
+              transactions={recentTransactions}
+              currency={currency}
+              error={transactionsError}
+              isLoading={
+                isTransactionsFetching && recentTransactions.length === 0
+              }
+              onRetry={() => refetchTransactions()}
             />
           </section>
 
@@ -169,6 +231,7 @@ export default function DashboardPage() {
             accounts={overview.accounts}
             goals={overview.goals}
             budgets={overview.budgets}
+            currency={currency}
           />
         </>
       )}

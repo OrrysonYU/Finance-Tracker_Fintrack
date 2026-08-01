@@ -1,67 +1,179 @@
+import { motion, useReducedMotion } from "framer-motion";
+import { BarChart3 } from "lucide-react";
 import {
   Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
+  ComposedChart,
+  Line,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 
-import { formatMoney } from "./dashboard-ui";
+import { DashboardCard } from "./DashboardCard";
+import { DashboardPanelState } from "./DashboardPanelState";
+import {
+  formatCompactNumber,
+  formatMoney,
+  formatShortPeriod,
+} from "./dashboard-ui";
 
-const FLOW_COLORS = ["#22C55E", "#EF4444", "#3B82F6"];
-
-export function CashFlowChart({ summary, currency }) {
-  const data = [
-    { name: "Income", amount: Number(summary?.income || 0) },
-    { name: "Expenses", amount: Number(summary?.expense || 0) },
-    { name: "Net", amount: Number(summary?.net || 0) },
-  ];
+export function CashFlowChart({
+  currency,
+  error,
+  isLoading,
+  onRetry,
+  summary,
+  trend = [],
+}) {
+  const reduceMotion = useReducedMotion();
+  const source =
+    trend.length > 0
+      ? trend
+      : summary
+        ? [{ ...summary, period: summary.period }]
+        : [];
+  const data = source.map((item) => ({
+    period: formatShortPeriod(item.period),
+    income: Number(item.income || 0),
+    expense: Number(item.expense || 0),
+    net: Number(item.net || 0),
+  }));
+  const hasValues = data.some(
+    (item) => item.income !== 0 || item.expense !== 0 || item.net !== 0
+  );
 
   return (
-    <section className="glass rounded-3xl border border-white/10 p-5 md:p-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-blue-200/70">
-          Cash flow
-        </p>
-        <h2 className="mt-2 text-lg font-semibold text-white">Monthly movement</h2>
-      </div>
-      <div className="mt-6 h-72" aria-label="Income, expenses, and net chart">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#2d2d44" vertical={false} />
-            <XAxis
-              dataKey="name"
-              tick={{ fill: "#9ca3af", fontSize: 12 }}
-              axisLine={{ stroke: "#2d2d44" }}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fill: "#9ca3af", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-              width={55}
-            />
-            <Tooltip
-              cursor={{ fill: "rgba(255,255,255,0.04)" }}
-              formatter={(value) => [formatMoney(value, currency), "Amount"]}
-              contentStyle={{
-                background: "#111122",
-                border: "1px solid #2d2d44",
-                borderRadius: 14,
-                color: "#fff",
-              }}
-            />
-            <Bar dataKey="amount" radius={[8, 8, 0, 0]}>
-              {data.map((item, index) => (
-                <Cell key={item.name} fill={FLOW_COLORS[index]} />
+    <DashboardCard
+      className="dashboard-card--chart dashboard-cash-flow"
+      eyebrow="Cash flow"
+      icon={BarChart3}
+      title="Income vs expenses"
+      titleId="cash-flow-title"
+      description="A six-month view of money coming in, going out, and the resulting net trend."
+    >
+      {isLoading ? (
+        <DashboardPanelState
+          state="loading"
+          title="Loading cash-flow trend"
+          description="Preparing your recent monthly performance."
+        />
+      ) : error ? (
+        <DashboardPanelState
+          state="error"
+          title="Trend unavailable"
+          description="Your current totals are still available. Retry the historical trend when ready."
+          onAction={onRetry}
+        />
+      ) : hasValues ? (
+        <motion.figure
+          className="dashboard-chart"
+          initial={reduceMotion ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.24 }}
+        >
+          <div className="dashboard-chart__legend" aria-hidden="true">
+            <span><i className="dashboard-chart__key dashboard-chart__key--income" />Income</span>
+            <span><i className="dashboard-chart__key dashboard-chart__key--expense" />Expenses</span>
+            <span><i className="dashboard-chart__key dashboard-chart__key--net" />Net</span>
+          </div>
+          <div
+            className="dashboard-chart__canvas"
+            role="img"
+            aria-label="Six-month income, expenses, and net cash-flow chart"
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart
+                data={data}
+                margin={{ top: 12, right: 8, left: -12, bottom: 0 }}
+              >
+                <CartesianGrid
+                  stroke="var(--chart-grid)"
+                  strokeDasharray="3 5"
+                  vertical={false}
+                />
+                <XAxis
+                  dataKey="period"
+                  tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                  axisLine={{ stroke: "var(--chart-grid)" }}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fill: "var(--chart-axis)", fontSize: 11 }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={formatCompactNumber}
+                  width={52}
+                />
+                <Tooltip
+                  cursor={{ fill: "var(--color-surface-subtle)" }}
+                  formatter={(value, name) => [
+                    formatMoney(value, currency),
+                    name === "expense"
+                      ? "Expenses"
+                      : name.charAt(0).toUpperCase() + name.slice(1),
+                  ]}
+                  contentStyle={{
+                    background: "var(--color-surface)",
+                    border: "1px solid var(--color-border-default)",
+                    borderRadius: "var(--radius-card)",
+                    boxShadow: "var(--shadow-popover)",
+                    color: "var(--color-text-primary)",
+                  }}
+                />
+                <Bar
+                  dataKey="income"
+                  fill="var(--chart-primary)"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={24}
+                  isAnimationActive={!reduceMotion}
+                />
+                <Bar
+                  dataKey="expense"
+                  fill="var(--chart-secondary)"
+                  radius={[4, 4, 0, 0]}
+                  maxBarSize={24}
+                  isAnimationActive={!reduceMotion}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="net"
+                  stroke="var(--chart-positive)"
+                  strokeWidth={2}
+                  dot={{ r: 3, fill: "var(--color-surface)", strokeWidth: 2 }}
+                  activeDot={{ r: 4 }}
+                  isAnimationActive={!reduceMotion}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+          <figcaption className="sr-only">
+            Monthly values are provided in the accessible table below.
+          </figcaption>
+          <table className="sr-only">
+            <caption>Income, expenses, and net cash flow by month</caption>
+            <thead>
+              <tr><th>Month</th><th>Income</th><th>Expenses</th><th>Net</th></tr>
+            </thead>
+            <tbody>
+              {data.map((item) => (
+                <tr key={item.period}>
+                  <th>{item.period}</th>
+                  <td>{formatMoney(item.income, currency)}</td>
+                  <td>{formatMoney(item.expense, currency)}</td>
+                  <td>{formatMoney(item.net, currency)}</td>
+                </tr>
               ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </section>
+            </tbody>
+          </table>
+        </motion.figure>
+      ) : (
+        <DashboardPanelState
+          title="No cash-flow history yet"
+          description="Income and expense trends will appear after you record transactions."
+        />
+      )}
+    </DashboardCard>
   );
 }

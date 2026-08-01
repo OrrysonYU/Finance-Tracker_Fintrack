@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 export function DashboardKpiCard({
   icon: Icon,
@@ -8,29 +8,24 @@ export function DashboardKpiCard({
   tone,
   index,
 }) {
+  const reduceMotion = useReducedMotion();
+
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06 }}
-      className="glass rounded-3xl border border-white/10 p-5"
+      transition={{ delay: index * 0.04, duration: 0.22 }}
+      whileHover={reduceMotion ? undefined : { y: -2 }}
+      className="dashboard-kpi-card"
     >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--color-muted)]">
-            {label}
-          </p>
-          <p className="mt-3 break-words text-2xl font-bold tracking-tight text-white">
-            {value}
-          </p>
+      <div className="dashboard-kpi-card__topline">
+        <div className={"dashboard-kpi-card__icon dashboard-tone--" + tone}>
+          <Icon size={19} aria-hidden="true" />
         </div>
-        <div
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl ${tone}`}
-        >
-          <Icon size={21} aria-hidden="true" />
-        </div>
+        <p className="dashboard-kpi-card__label">{label}</p>
       </div>
-      <p className="mt-4 text-xs leading-5 text-[var(--color-muted)]">{detail}</p>
+      <p className="dashboard-kpi-card__value tabular-nums">{value}</p>
+      <p className="dashboard-kpi-card__detail">{detail}</p>
     </motion.article>
   );
 }

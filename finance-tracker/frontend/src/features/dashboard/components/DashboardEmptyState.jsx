@@ -1,35 +1,42 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeftRight, Plus, WalletCards } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export function DashboardEmptyState() {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <section className="glass overflow-hidden rounded-3xl border border-dashed border-blue-300/30 p-8 text-center md:p-12">
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-blue-500/15 text-blue-200">
-        <WalletCards size={30} />
-      </div>
-      <h2 className="mt-5 text-2xl font-semibold text-white">
-        Build your first financial overview
-      </h2>
-      <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--color-muted)]">
-        Add an account, then record income or an expense. Your dashboard cards,
-        charts, goals, and budget signals will appear here automatically.
+    <motion.section
+      className="dashboard-empty"
+      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      aria-labelledby="dashboard-empty-title"
+    >
+      <span className="dashboard-empty__icon" aria-hidden="true">
+        <WalletCards size={28} />
+      </span>
+      <p className="dashboard-empty__eyebrow">Ready when you are</p>
+      <h2 id="dashboard-empty-title">Build your financial command center</h2>
+      <p>
+        Start with an account, then record income or an expense. Fintrack will
+        automatically turn that activity into balances, trends, budget signals,
+        and useful insights.
       </p>
-      <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
-        <Link
-          to="/accounts"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-400 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:from-blue-500 hover:to-yellow-400"
-        >
-          <Plus size={17} />
+      <ol className="dashboard-empty__steps">
+        <li><span>1</span><strong>Add an account</strong></li>
+        <li><span>2</span><strong>Record a transaction</strong></li>
+        <li><span>3</span><strong>Review your insights</strong></li>
+      </ol>
+      <div className="dashboard-empty__actions">
+        <Link to="/accounts" className="ui-button ui-button--primary ui-button--lg">
+          <Plus size={17} aria-hidden="true" />
           Add an account
         </Link>
-        <Link
-          to="/transactions"
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/5"
-        >
-          <ArrowLeftRight size={17} />
+        <Link to="/transactions" className="ui-button ui-button--secondary ui-button--lg">
+          <ArrowLeftRight size={17} aria-hidden="true" />
           View transactions
         </Link>
       </div>
-    </section>
+    </motion.section>
   );
 }
