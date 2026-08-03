@@ -1,10 +1,7 @@
 import http from "../../lib/http";
+import { fetchAllPages } from "../../lib/api-pagination";
 
 const ACCOUNTS_URL = "/api/finance/accounts/";
-
-function unwrapList(data) {
-  return Array.isArray(data) ? data : data?.results ?? [];
-}
 
 export const accountTypes = [
   { value: "BANK", label: "Bank" },
@@ -16,9 +13,9 @@ export const accountTypes = [
 ];
 
 export const accountsApi = {
-  async list() {
-    const { data } = await http.get(ACCOUNTS_URL);
-    return unwrapList(data);
+  async list(params = {}) {
+    const requestParams = params?.queryKey ? {} : params;
+    return fetchAllPages(http, ACCOUNTS_URL, requestParams);
   },
 
   async create(payload) {
@@ -27,6 +24,15 @@ export const accountsApi = {
       type: payload.type,
       currency: payload.currency.trim().toUpperCase(),
       opening_balance: payload.opening_balance,
+    });
+    return data;
+  },
+
+  async update({ id, ...payload }) {
+    const { data } = await http.patch(`${ACCOUNTS_URL}${id}/`, {
+      name: payload.name.trim(),
+      type: payload.type,
+      currency: payload.currency.trim().toUpperCase(),
     });
     return data;
   },

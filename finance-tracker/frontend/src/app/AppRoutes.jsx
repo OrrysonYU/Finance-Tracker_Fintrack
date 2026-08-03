@@ -3,14 +3,14 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { AppShell } from "../components/layout";
 import { StateMessage } from "../components/ui";
 import { useAuth } from "../context/useAuth";
-import AccountsPage from "../features/accounts/AccountsPage";
+import AccountsPage from "../features/accounts/AccountsWorkspace";
 import { AuthPageSkeleton } from "../features/auth/components/AuthPageSkeleton";
 import LoginPage from "../features/auth/LoginPage";
 import RegisterPage from "../features/auth/RegisterPage";
 import BudgetsPage from "../features/budgets/BudgetsPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
 import GoalsPage from "../features/goals/GoalsPage";
-import TransactionsPage from "../features/transactions/TransactionsPage";
+import TransactionsPage from "../features/transactions/TransactionsWorkspace";
 
 function FullPageState({ title, message }) {
   return (
