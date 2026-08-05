@@ -40,7 +40,7 @@ export function AuthLayout({
             <LockKeyhole size={15} aria-hidden="true" />
             Private workspace
           </span>
-          <h1>{asideTitle}</h1>
+          <h2>{asideTitle}</h2>
           <p>{asideDescription}</p>
           <ul className="auth-story__points">
             {points.map((point) => (
@@ -84,7 +84,7 @@ export function AuthLayout({
         >
           <header className="auth-card__header">
             <p className="auth-card__eyebrow">{eyebrow}</p>
-            <h2>{title}</h2>
+            <h1>{title}</h1>
             <p>{description}</p>
           </header>
           {children}

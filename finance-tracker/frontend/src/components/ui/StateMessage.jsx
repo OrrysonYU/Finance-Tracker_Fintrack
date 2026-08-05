@@ -13,6 +13,7 @@ export function StateMessage({
   description,
   state = "empty",
   action,
+  icon: CustomIcon,
   className = "",
   ...props
 }) {
@@ -28,7 +29,11 @@ export function StateMessage({
       {...props}
     >
       <span className="ui-state-message__icon" aria-hidden="true">
-        <Icon size={20} className={state === "loading" ? "animate-spin" : undefined} />
+        {CustomIcon ? (
+          <CustomIcon size={20} />
+        ) : (
+          <Icon size={20} className={state === "loading" ? "animate-spin" : undefined} />
+        )}
       </span>
       {title && <h3 className="ui-state-message__title">{title}</h3>}
       {description && <p className="ui-state-message__description">{description}</p>}

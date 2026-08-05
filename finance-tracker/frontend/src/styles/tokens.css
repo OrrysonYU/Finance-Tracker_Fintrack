@@ -18,9 +18,10 @@
   --color-border-subtle: #edf0f3;
   --color-border-default: #e2e6ec;
   --color-border-strong: #c7ced8;
+  --color-border-control: #8793a3;
   --color-text-primary: #172033;
   --color-text-secondary: #526071;
-  --color-text-muted: #6f7c8d;
+  --color-text-muted: #626f81;
   --color-text-inverse: #ffffff;
 
   /* Brand and semantic roles */
@@ -117,5 +118,5 @@
   --chart-positive: #15803d;
   --chart-negative: #b42318;
   --chart-grid: #e2e6ec;
-  --chart-axis: #6f7c8d;
+  --chart-axis: #626f81;
 }

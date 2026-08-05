@@ -57,6 +57,7 @@ export function AccountEditor({ account, error, isOpen, isSaving, onCancel, onSu
           exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }}
           transition={{ duration: 0.22 }}
           className="finance-editor-wrap"
+          id="account-editor"
         >
           <form className="finance-editor" onSubmit={submit} noValidate>
             <div className="finance-editor__header">

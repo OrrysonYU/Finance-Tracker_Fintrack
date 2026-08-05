@@ -22,7 +22,7 @@ export function BudgetForm({ categories, error, isSaving, onCancel, onSubmit }) 
   }
 
   return (
-    <motion.form initial={reduceMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }} transition={{ duration: 0.22 }} onSubmit={handleSubmit} className="finance-editor budget-editor">
+    <motion.form id="budget-editor" initial={reduceMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }} transition={{ duration: 0.22 }} onSubmit={handleSubmit} className="finance-editor budget-editor">
       <div className="finance-editor__header"><div><p className="finance-editor__eyebrow">New spending plan</p><h2>Create a budget</h2><p>Choose a period and assign each expense category a practical limit.</p></div><Button variant="ghost" size="sm" onClick={onCancel} aria-label="Close budget form"><X size={18} /></Button></div>
       <div className="budget-form-grid">
         <Field label="Budget name" required id="budget-name"><Input name="name" value={form.name} onChange={setField} required autoFocus placeholder="Monthly essentials" /></Field>

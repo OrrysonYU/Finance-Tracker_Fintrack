@@ -57,7 +57,7 @@ export function TransactionEditor({ accounts, categories, error, isOpen, isSavin
   const knownFieldError = ["account", "amount", "description", "category", "timestamp", "is_credit"].some((field) => fieldError(error, field));
 
   return <AnimatePresence initial={false}>{isOpen && (
-    <motion.section initial={reduceMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }} transition={{ duration: 0.22 }} className="finance-editor-wrap">
+    <motion.section id="transaction-editor" initial={reduceMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }} transition={{ duration: 0.22 }} className="finance-editor-wrap">
       <form className="finance-editor" onSubmit={submit} noValidate>
         <div className="finance-editor__header"><div><p className="finance-editor__eyebrow">{transaction ? "Ledger correction" : "New ledger entry"}</p><h2>{transaction ? "Edit transaction" : "Add transaction"}</h2><p>Capture the financial context once. Fintrack will update the linked account balance automatically.</p></div><button type="button" className="finance-icon-button" onClick={onCancel} aria-label="Close transaction form"><X size={18} /></button></div>
 

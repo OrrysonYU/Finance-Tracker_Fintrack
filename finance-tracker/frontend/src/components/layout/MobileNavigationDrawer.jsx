@@ -4,7 +4,7 @@ import { X } from "lucide-react";
 import { AppSidebar } from "./AppSidebar";
 
 const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+  'a[href], button:not([disabled]):not([tabindex="-1"]), input:not([disabled]):not([tabindex="-1"]), select:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
 
 export function MobileNavigationDrawer({ open, user, onClose, onLogout }) {
   const drawerRef = useRef(null);
@@ -55,12 +55,10 @@ export function MobileNavigationDrawer({ open, user, onClose, onLogout }) {
 
   return (
     <div className="app-drawer" role="presentation">
-      <button
-        type="button"
+      <div
         className="app-drawer__backdrop"
         onClick={onClose}
-        aria-label="Close navigation"
-        tabIndex={-1}
+        aria-hidden="true"
       />
       <div
         ref={drawerRef}

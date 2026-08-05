@@ -21,7 +21,7 @@ export function GoalForm({ error, isSaving, onCancel, onSubmit }) {
   const today = dayjs().format("YYYY-MM-DD");
 
   return (
-    <motion.form initial={reduceMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }} transition={{ duration: 0.22 }} onSubmit={(event) => { event.preventDefault(); onSubmit(form, () => setForm(initialForm)); }} className="finance-editor goal-editor">
+    <motion.form id="goal-editor" initial={reduceMotion ? false : { opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={reduceMotion ? { opacity: 0 } : { opacity: 0, height: 0 }} transition={{ duration: 0.22 }} onSubmit={(event) => { event.preventDefault(); onSubmit(form, () => setForm(initialForm)); }} className="finance-editor goal-editor">
       <div className="finance-editor__header"><div><p className="finance-editor__eyebrow">New milestone</p><h2>Create a saving goal</h2><p>Define the target and timing. Fintrack will translate them into a clear contribution plan.</p></div><Button variant="ghost" size="sm" onClick={onCancel} aria-label="Close goal form"><X size={18} /></Button></div>
       <div className="goal-form-grid">
         <Field label="Goal name" required id="goal-name"><Input name="name" value={form.name} onChange={handleChange} required autoFocus placeholder="Emergency fund" /></Field>

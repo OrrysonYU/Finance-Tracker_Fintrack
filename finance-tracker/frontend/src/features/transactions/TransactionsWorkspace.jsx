@@ -4,7 +4,7 @@ import { Plus, RefreshCcw, Trash2, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { Alert, Button, ConfirmDialog, Pagination, Skeleton, StateMessage } from "../../components/ui";
+import { Alert, Button, ConfirmDialog, Pagination, Skeleton, SkeletonGroup, StateMessage } from "../../components/ui";
 import { transactionSupportApi, transactionsApi } from "./api";
 import { TransactionDetailsDialog } from "./components/TransactionDetailsDialog";
 import { TransactionEditor } from "./components/TransactionEditor";
@@ -42,7 +42,7 @@ function toApiFilters(filters, sort) {
 }
 
 function TransactionsLoading() {
-  return <div className="transactions-skeleton" aria-label="Loading transactions"><div className="finance-summary-grid">{[0, 1, 2].map((item) => <Skeleton key={item} className="transactions-skeleton__summary" />)}</div><Skeleton className="transactions-skeleton__filters" /><Skeleton className="transactions-skeleton__table" /></div>;
+  return <SkeletonGroup className="transactions-skeleton" label="Loading transactions"><div className="finance-summary-grid">{[0, 1, 2].map((item) => <Skeleton key={item} className="transactions-skeleton__summary" />)}</div><Skeleton className="transactions-skeleton__filters" /><Skeleton className="transactions-skeleton__table" /></SkeletonGroup>;
 }
 
 export default function TransactionsWorkspace() {
@@ -144,7 +144,7 @@ export default function TransactionsWorkspace() {
   const hasAccounts = support.accounts.length > 0;
 
   return <div className="finance-page transactions-page">
-    <motion.header initial={reduceMotion ? false : { opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="finance-page__header"><div className="finance-page__heading"><p className="finance-page__eyebrow">Primary ledger</p><h1>Transactions</h1><p>Search, review, categorize, and manage every movement of money from one focused workspace.</p></div><Button onClick={openCreate} disabled={!hasAccounts}><Plus size={17} />Add transaction</Button></motion.header>
+    <motion.header initial={reduceMotion ? false : { opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="finance-page__header"><div className="finance-page__heading"><p className="finance-page__eyebrow">Primary ledger</p><h1>Transactions</h1><p>Search, review, categorize, and manage every movement of money from one focused workspace.</p></div><Button onClick={openCreate} disabled={!hasAccounts} aria-expanded={isEditorOpen} aria-controls="transaction-editor"><Plus size={17} aria-hidden="true" />Add transaction</Button></motion.header>
 
     <TransactionEditor accounts={support.accounts} categories={support.categories} error={saveTransaction.error} isOpen={isEditorOpen} isSaving={saveTransaction.isPending} transaction={editorTransaction} onCancel={() => { saveTransaction.reset(); setIsEditorOpen(false); setEditorTransaction(null); }} onSubmit={(form) => saveTransaction.mutate(form)} />
     {notice && <Alert tone="success" title="Ledger updated" className="finance-notice">{notice}<button type="button" onClick={() => setNotice("")} className="finance-notice__dismiss">Dismiss</button></Alert>}

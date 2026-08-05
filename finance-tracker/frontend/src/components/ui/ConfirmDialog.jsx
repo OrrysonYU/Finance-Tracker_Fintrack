@@ -1,4 +1,10 @@
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from "@headlessui/react";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogDescription,
+  DialogPanel,
+  DialogTitle,
+} from "@headlessui/react";
 import { motion, useReducedMotion } from "framer-motion";
 import { TriangleAlert } from "lucide-react";
 
@@ -32,7 +38,9 @@ export function ConfirmDialog({
           </div>
           <div className="ui-dialog__copy">
             <DialogTitle className="ui-dialog__title">{title}</DialogTitle>
-            <p className="ui-dialog__description">{description}</p>
+            <DialogDescription className="ui-dialog__description">
+              {description}
+            </DialogDescription>
           </div>
           <div className="ui-dialog__actions">
             <Button variant="secondary" onClick={onClose} disabled={isPending}>Cancel</Button>

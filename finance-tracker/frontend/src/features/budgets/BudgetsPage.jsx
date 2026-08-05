@@ -40,7 +40,7 @@ export default function BudgetsPage() {
     <div className="finance-page budgets-page">
       <motion.header initial={reduceMotion ? false : { opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="finance-page__header">
         <div className="finance-page__heading"><p className="finance-page__eyebrow">Spending guardrails</p><h1>Budgets</h1><p>Set clear category limits, monitor utilization, and spot pressure before it becomes overspending.</p></div>
-        <Button id="add-budget-btn" onClick={() => isFormOpen ? setIsFormOpen(false) : openForm()} disabled={!categories.length}><Plus size={17} aria-hidden="true" />{isFormOpen ? "Close form" : "Create budget"}</Button>
+        <Button id="add-budget-btn" onClick={() => isFormOpen ? setIsFormOpen(false) : openForm()} disabled={!categories.length} aria-expanded={isFormOpen} aria-controls="budget-editor"><Plus size={17} aria-hidden="true" />{isFormOpen ? "Close form" : "Create budget"}</Button>
       </motion.header>
 
       <AnimatePresence initial={false}>

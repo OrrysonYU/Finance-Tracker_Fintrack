@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/useAuth";
+import { StateMessage } from "../ui";
 import { AppSidebar } from "./AppSidebar";
 import { MobileHeader } from "./MobileHeader";
 import { MobileNavigationDrawer } from "./MobileNavigationDrawer";
@@ -61,7 +62,18 @@ export default function AppShell() {
           <p className="app-shell__page-description">{currentPage.description}</p>
         </div>
         <div className="app-shell__content legacy-feature-surface">
-          <Outlet />
+          <Suspense
+            fallback={
+              <StateMessage
+                className="app-shell__route-loading"
+                state="loading"
+                title={`Loading ${currentPage.label.toLowerCase()}`}
+                description="Preparing this part of your financial workspace."
+              />
+            }
+          >
+            <Outlet />
+          </Suspense>
         </div>
       </main>
     </div>

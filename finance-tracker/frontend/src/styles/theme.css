@@ -260,7 +260,7 @@ textarea:disabled {
 .ui-select,
 .ui-textarea {
   width: 100%;
-  border: var(--border-width-default) solid var(--color-border-strong);
+  border: var(--border-width-default) solid var(--color-border-control);
   border-radius: var(--radius-control);
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -298,6 +298,13 @@ textarea:disabled {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px var(--color-accent-soft);
   outline: none;
+}
+
+.ui-input:focus-visible,
+.ui-select:focus-visible,
+.ui-textarea:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 .ui-input[aria-invalid="true"],
@@ -757,6 +764,11 @@ textarea:disabled {
   max-width: var(--layout-content-max);
   margin: 0 auto;
   padding: var(--space-6) var(--layout-page-padding-mobile) var(--space-12);
+}
+
+.app-shell__route-loading {
+  min-height: 22rem;
+  align-content: center;
 }
 
 /*
@@ -1236,7 +1248,7 @@ textarea:disabled {
   font-weight: 650;
 }
 
-.auth-story h1 {
+.auth-story h2 {
   max-width: 32rem;
   margin: var(--space-6) 0 0;
   color: var(--color-text-primary);
@@ -1346,7 +1358,7 @@ textarea:disabled {
   text-transform: uppercase;
 }
 
-.auth-card__header h2 {
+.auth-card__header h1 {
   margin: 0;
   color: var(--color-text-primary);
   font-size: clamp(1.625rem, 4vw, 2rem);
@@ -3226,7 +3238,7 @@ textarea:disabled {
   width: 100%;
   min-height: 2.625rem;
   padding: 0.625rem 2.75rem 0.625rem 2.5rem;
-  border: var(--border-width-default) solid var(--color-border-default);
+  border: var(--border-width-default) solid var(--color-border-control);
   border-radius: var(--radius-control);
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -3238,6 +3250,11 @@ textarea:disabled {
 .ui-search__input:focus {
   border-color: var(--color-accent);
   box-shadow: 0 0 0 3px rgb(37 99 235 / 0.12);
+}
+
+.ui-search__input:focus-visible {
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
 }
 
 .ui-search__clear {
@@ -3298,6 +3315,7 @@ textarea:disabled {
 
 .account-assets-grid {
   display: grid;
+  min-width: 0;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-4);
 }
@@ -3330,8 +3348,12 @@ textarea:disabled {
 
 .account-asset-card__header {
   display: flex;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   align-items: flex-start;
   gap: var(--space-3);
+  overflow: hidden;
 }
 
 .account-asset-card__mark {
@@ -3352,8 +3374,11 @@ textarea:disabled {
 .account-asset-card--neutral .account-asset-card__mark { background: var(--color-surface-muted); color: var(--color-text-secondary); }
 
 .account-asset-card__identity {
+  width: 0;
   min-width: 0;
-  flex: 1;
+  max-width: 100%;
+  flex: 1 1 0;
+  overflow: hidden;
 }
 
 .account-asset-card__identity span {
@@ -3726,9 +3751,14 @@ textarea:disabled {
 .transaction-amount[data-direction="expense"],
 .transaction-details__amount strong[data-direction="expense"] { color: var(--color-text-primary); }
 
-.transaction-mobile-list { display: none; }
+.transaction-mobile-list {
+  display: none;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
 
 .transaction-mobile-card {
+  min-width: 0;
   padding: var(--space-4);
   border: var(--border-width-default) solid var(--color-border-default);
   border-radius: var(--radius-card);
@@ -3839,7 +3869,7 @@ textarea:disabled {
   .finance-editor__actions, .ui-dialog__actions, .transaction-details__actions { flex-direction: column-reverse; }
   .finance-editor__actions .ui-button, .ui-dialog__actions .ui-button, .transaction-details__actions .ui-button { width: 100%; }
   .transaction-direction { grid-template-columns: 1fr; }
-  .account-assets-grid { grid-template-columns: 1fr; }
+  .account-assets-grid { grid-template-columns: minmax(0, 1fr); }
   .finance-toolbar__primary { align-items: stretch; flex-direction: column; }
   .finance-toolbar__count { padding-left: var(--space-1); }
   .finance-toolbar__controls { grid-template-columns: 1fr; }
@@ -4297,7 +4327,7 @@ textarea:disabled {
   .goal-card-grid,
   .budget-form-grid,
   .budget-custom-dates,
-  .goal-form-grid { grid-template-columns: 1fr; }
+  .goal-form-grid { grid-template-columns: minmax(0, 1fr); }
   .goal-form__description,
   .budget-form__availability { grid-column: auto; }
   .budget-line { grid-template-columns: 1fr auto; }

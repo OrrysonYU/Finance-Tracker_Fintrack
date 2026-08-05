@@ -911,3 +911,50 @@ Its white-first canvas, clean typography, subtle gray hierarchy, restrained blue
 The direction also gives accessibility and responsive design a natural home. It does not depend on fragile visual effects, color-heavy meaning, or desktop-only density. Its reliance on semantic tokens, consistent spacing, explicit states, and reusable components makes it maintainable as Fintrack grows.
 
 Fintrack should therefore modernize around this system consistently, borrowing only carefully selected behavioral patterns from the other directions. Executed with discipline, Premium Minimal White SaaS will allow Fintrack to feel calm without feeling sparse, information-dense without feeling overwhelming, and premium without sacrificing usefulness—the right foundation for a world-class finance SaaS.
+
+## 18. UIX-008 Production QA Addendum
+
+UIX-008 completed the first full production UI quality pass against the implemented Premium Minimal White system. This addendum records the resulting release contract; it does not change the approved visual direction.
+
+### 18.1 Release validation source
+
+`frontend/QA_CHECKLIST.md` is the canonical repeatable release checklist for responsive, visual, interaction, accessibility, state, and runtime review. Future release candidates must record the tested environment, browsers, viewports, assistive technology, results, and accepted risks. A failed or blocked critical flow, accessibility gate, console check, lint check, or production build prevents UI sign-off.
+
+### 18.2 Verified implementation decisions
+
+- Muted supporting text uses `--color-text-muted: #626f81`. It provides at least 4.5:1 contrast against the canvas, subtle surface, and muted surface used by current components.
+- Interactive control boundaries use `--color-border-control: #8793a3` on white surfaces. Quiet structural borders continue to use the existing subtle/default roles so the product does not become visually heavy.
+- Text inputs, selects, textareas, and search inputs retain the restrained accent treatment and add a clearly visible three-pixel focus outline. Feature styles must not remove this focus-visible treatment.
+- Chart axes use the accessible muted-text value. Charts must continue to provide visible legends or labels and a textual or tabular data alternative.
+- Route content is loaded by product area, with an accessible in-shell loading state for protected routes and the established authentication skeleton for public routes. New routes must preserve meaningful loading feedback and update the document title.
+- Mobile navigation is a modal interaction: initial focus must land on a visible drawer control, Tab must remain inside, Escape must close it, and focus must return to the opener.
+- Confirmation dialogs require both an accessible title and a programmatically associated description.
+- Disclosure controls for inline editors, advanced filters, and expandable details must expose `aria-expanded` and `aria-controls`.
+- Skeleton groups must expose one useful loading status while individual decorative skeleton shapes remain hidden from assistive technology.
+
+### 18.3 Responsive acceptance baseline
+
+Release review covers 1440 x 900, 1280 x 800, 1024 x 768, 768 x 1024, 390 x 844, and the 320 CSS-pixel minimum. The same candidate must also pass 200% zoom and reduced-motion review.
+
+The protected shell switches from the fixed desktop sidebar to the deliberate mobile header and drawer below the desktop breakpoint. Transaction tables switch to structured cards before the tabular layout becomes unreadable. Report category data follows the same table-to-structured-list approach. Grids collapse by content priority, and forms become single-column at mobile widths.
+
+Page-level horizontal scrolling, clipped controls, overlapping sticky regions, and hidden financial context are release blockers. A bounded data region may scroll only when comparison cannot be represented accessibly in the approved responsive alternative.
+
+### 18.4 Accessibility acceptance baseline
+
+Fintrack continues to target WCAG 2.2 Level AA. Automated tooling is a gate, not the complete review. Each release includes keyboard-only traversal, focus visibility, dialog/drawer behavior, heading and landmark review, form error association, table semantics, chart alternatives, contrast measurement, 200% zoom/reflow, reduced-motion behavior, and representative screen-reader coverage.
+
+New UI must preserve the following production characteristics:
+
+- one clear page-level heading and a logical heading hierarchy;
+- route-specific document titles;
+- persistent labels and programmatically associated validation;
+- no color-only financial, status, selection, or progress meaning;
+- named icon-only controls with decorative icons hidden;
+- status and busy announcements that are useful without being repetitive;
+- keyboard-equivalent access to every hover, menu, disclosure, and dialog action; and
+- predictable focus entry, containment, and return for modal interactions.
+
+### 18.5 Change discipline
+
+Production QA fixes must remain evidence-based and targeted. They may strengthen tokens, semantics, interaction states, responsive constraints, or shared behavior, but must not use QA as authorization for a redesign. Business rules, API contracts, routing intent, and backend behavior remain outside a UI quality pass unless a separately approved task changes them.

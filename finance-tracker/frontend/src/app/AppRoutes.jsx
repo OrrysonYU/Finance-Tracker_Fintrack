@@ -1,18 +1,32 @@
+import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { AppShell } from "../components/layout";
 import { StateMessage } from "../components/ui";
 import { useAuth } from "../context/useAuth";
-import AccountsPage from "../features/accounts/AccountsWorkspace";
 import { AuthPageSkeleton } from "../features/auth/components/AuthPageSkeleton";
-import LoginPage from "../features/auth/LoginPage";
-import RegisterPage from "../features/auth/RegisterPage";
-import BudgetsPage from "../features/budgets/BudgetsPage";
-import DashboardPage from "../features/dashboard/DashboardPage";
-import GoalsPage from "../features/goals/GoalsPage";
-import ReportsPage from "../features/reports/ReportsPage";
-import AiInsightsPage from "../features/ai-insights/AiInsightsPage";
-import TransactionsPage from "../features/transactions/TransactionsWorkspace";
+
+const AccountsPage = lazy(() => import("../features/accounts/AccountsWorkspace"));
+const AiInsightsPage = lazy(() => import("../features/ai-insights/AiInsightsPage"));
+const BudgetsPage = lazy(() => import("../features/budgets/BudgetsPage"));
+const DashboardPage = lazy(() => import("../features/dashboard/DashboardPage"));
+const GoalsPage = lazy(() => import("../features/goals/GoalsPage"));
+const LoginPage = lazy(() => import("../features/auth/LoginPage"));
+const RegisterPage = lazy(() => import("../features/auth/RegisterPage"));
+const ReportsPage = lazy(() => import("../features/reports/ReportsPage"));
+const TransactionsPage = lazy(() => import("../features/transactions/TransactionsWorkspace"));
+
+const ROUTE_TITLES = {
+  "/": "Dashboard",
+  "/accounts": "Accounts",
+  "/budgets": "Budgets",
+  "/goals": "Goals",
+  "/insights": "AI Insights",
+  "/login": "Sign in",
+  "/register": "Create account",
+  "/reports": "Reports",
+  "/transactions": "Transactions",
+};
 
 function FullPageState({ title, message }) {
   return (
@@ -59,14 +73,26 @@ function PublicRoute({ children }) {
   return children;
 }
 
+function AuthRouteContent({ children }) {
+  return <Suspense fallback={<AuthPageSkeleton />}>{children}</Suspense>;
+}
+
 export function AppRoutes() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    document.title = `${ROUTE_TITLES[pathname] || "Fintrack"} | Fintrack`;
+  }, [pathname]);
+
   return (
     <Routes>
       <Route
         path="/login"
         element={
           <PublicRoute>
-            <LoginPage />
+            <AuthRouteContent>
+              <LoginPage />
+            </AuthRouteContent>
           </PublicRoute>
         }
       />
@@ -74,7 +100,9 @@ export function AppRoutes() {
         path="/register"
         element={
           <PublicRoute>
-            <RegisterPage />
+            <AuthRouteContent>
+              <RegisterPage />
+            </AuthRouteContent>
           </PublicRoute>
         }
       />

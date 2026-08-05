@@ -4,7 +4,7 @@ import { Plus, RefreshCcw, WalletCards } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Alert, Button, ConfirmDialog, Skeleton, StateMessage } from "../../components/ui";
+import { Alert, Button, ConfirmDialog, Skeleton, SkeletonGroup, StateMessage } from "../../components/ui";
 import { transactionsApi } from "../transactions/api";
 import { accountsApi } from "./api";
 import { AccountAssetCard } from "./components/AccountAssetCard";
@@ -20,7 +20,7 @@ function messageFrom(error, fallback) {
 }
 
 function AccountsLoading() {
-  return <div className="accounts-skeleton" aria-label="Loading accounts"><div className="finance-summary-grid">{[0, 1, 2].map((item) => <Skeleton key={item} className="accounts-skeleton__summary" />)}</div><Skeleton className="accounts-skeleton__toolbar" /><div className="account-assets-grid">{[0, 1, 2, 3, 4, 5].map((item) => <Skeleton key={item} className="accounts-skeleton__card" />)}</div></div>;
+  return <SkeletonGroup className="accounts-skeleton" label="Loading accounts"><div className="finance-summary-grid">{[0, 1, 2].map((item) => <Skeleton key={item} className="accounts-skeleton__summary" />)}</div><Skeleton className="accounts-skeleton__toolbar" /><div className="account-assets-grid">{[0, 1, 2, 3, 4, 5].map((item) => <Skeleton key={item} className="accounts-skeleton__card" />)}</div></SkeletonGroup>;
 }
 
 export default function AccountsWorkspace() {
@@ -94,7 +94,7 @@ export default function AccountsWorkspace() {
     <div className="finance-page accounts-page">
       <motion.header initial={reduceMotion ? false : { opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="finance-page__header">
         <div className="finance-page__heading"><p className="finance-page__eyebrow">Portfolio workspace</p><h1>Accounts</h1><p>See every financial asset, its available balance, and the activity shaping your portfolio.</p></div>
-        <Button onClick={openCreate}><Plus size={17} aria-hidden="true" />Add account</Button>
+        <Button onClick={openCreate} aria-expanded={isEditorOpen} aria-controls="account-editor"><Plus size={17} aria-hidden="true" />Add account</Button>
       </motion.header>
 
       <AccountEditor account={editorAccount} error={saveAccount.error} isOpen={isEditorOpen} isSaving={saveAccount.isPending} onCancel={() => { saveAccount.reset(); setIsEditorOpen(false); setEditorAccount(null); }} onSubmit={(form) => saveAccount.mutate(form)} />
