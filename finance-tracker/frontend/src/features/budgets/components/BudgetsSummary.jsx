@@ -1,41 +1,13 @@
 import { Gauge, Layers3, PiggyBank } from "lucide-react";
-
+import { FinanceSummaryCard } from "../../../components/ui";
 import { formatMoney, summarizeBudgetLimits } from "./budget-ui";
 
 export function BudgetsSummary({ budgets }) {
   const summary = summarizeBudgetLimits(budgets);
   const cards = [
-    {
-      label: "Active budgets",
-      value: summary.budgetCount,
-      icon: PiggyBank,
-    },
-    {
-      label: "Category lines",
-      value: summary.itemCount,
-      icon: Layers3,
-    },
-    {
-      label: "Planned limit",
-      value: formatMoney(summary.totalLimit),
-      icon: Gauge,
-    },
+    { label: "Active plans", value: summary.budgetCount, detail: "Budget periods being monitored", icon: PiggyBank, tone: "accent" },
+    { label: "Planned limit", value: formatMoney(summary.totalLimit), detail: "Across all configured plans", icon: Gauge, tone: "success" },
+    { label: "Category limits", value: summary.itemCount, detail: "Individual spending guardrails", icon: Layers3, tone: "neutral" },
   ];
-
-  return (
-    <section className="grid gap-4 md:grid-cols-3">
-      {cards.map(({ icon: Icon, label, value }) => (
-        <div
-          key={label}
-          className="glass rounded-3xl border border-white/10 p-5 shadow-xl"
-        >
-          <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-500/15 text-blue-100">
-            <Icon size={20} />
-          </div>
-          <p className="text-sm text-[var(--color-muted)]">{label}</p>
-          <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
-        </div>
-      ))}
-    </section>
-  );
+  return <section className="finance-summary-grid" aria-label="Budget summary">{cards.map((card, index) => <FinanceSummaryCard key={card.label} {...card} index={index} />)}</section>;
 }

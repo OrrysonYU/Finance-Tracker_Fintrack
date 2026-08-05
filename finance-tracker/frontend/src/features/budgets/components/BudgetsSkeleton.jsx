@@ -1,20 +1,5 @@
+import { Skeleton, SkeletonGroup } from "../../../components/ui";
+
 export function BudgetsSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-4 md:grid-cols-3">
-        {[0, 1, 2].map((item) => (
-          <div
-            key={item}
-            className="glass h-36 animate-pulse rounded-3xl border border-white/10"
-          />
-        ))}
-      </div>
-      {[0, 1].map((item) => (
-        <div
-          key={item}
-          className="glass h-56 animate-pulse rounded-3xl border border-white/10"
-        />
-      ))}
-    </div>
-  );
+  return <SkeletonGroup className="budgets-skeleton" label="Loading budgets"><div className="finance-summary-grid">{Array.from({ length: 3 }).map((_, index) => <Skeleton className="budgets-skeleton__summary" key={index} />)}</div><div className="budget-card-grid">{Array.from({ length: 4 }).map((_, index) => <Skeleton className="budgets-skeleton__card" key={index} />)}</div></SkeletonGroup>;
 }

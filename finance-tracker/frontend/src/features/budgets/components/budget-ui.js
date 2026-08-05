@@ -43,3 +43,11 @@ export function summarizeBudgetLimits(budgets) {
     { budgetCount: 0, itemCount: 0, totalLimit: 0 }
   );
 }
+
+export function getUtilizationTone(percent, isOverBudget = false) {
+  const usage = Number(percent || 0);
+  if (isOverBudget || usage > 100) return { tone: "danger", badge: "danger", label: "Over budget", message: "Spending has exceeded this plan." };
+  if (usage >= 80) return { tone: "warning", badge: "warning", label: "Near limit", message: "Review upcoming spending before the period ends." };
+  if (usage >= 50) return { tone: "accent", badge: "info", label: "On track", message: "Utilization is within the planned range." };
+  return { tone: "success", badge: "success", label: "Healthy", message: "There is comfortable room remaining in this plan." };
+}

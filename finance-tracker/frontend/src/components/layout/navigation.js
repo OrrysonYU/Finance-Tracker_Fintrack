@@ -1,5 +1,7 @@
 import {
   ArrowLeftRight,
+  BrainCircuit,
+  ChartNoAxesCombined,
   LayoutDashboard,
   PiggyBank,
   Target,
@@ -37,6 +39,18 @@ export const APP_NAVIGATION = [
     label: "Goals",
     description: "Savings progress",
     icon: Target,
+  },
+  {
+    to: "/reports",
+    label: "Reports",
+    description: "Trends and comparisons",
+    icon: ChartNoAxesCombined,
+  },
+  {
+    to: "/insights",
+    label: "AI Insights",
+    description: "Actionable financial guidance",
+    icon: BrainCircuit,
   },
 ];
 

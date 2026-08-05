@@ -10,6 +10,8 @@ import RegisterPage from "../features/auth/RegisterPage";
 import BudgetsPage from "../features/budgets/BudgetsPage";
 import DashboardPage from "../features/dashboard/DashboardPage";
 import GoalsPage from "../features/goals/GoalsPage";
+import ReportsPage from "../features/reports/ReportsPage";
+import AiInsightsPage from "../features/ai-insights/AiInsightsPage";
 import TransactionsPage from "../features/transactions/TransactionsWorkspace";
 
 function FullPageState({ title, message }) {
@@ -89,6 +91,8 @@ export function AppRoutes() {
         <Route path="transactions" element={<TransactionsPage />} />
         <Route path="budgets" element={<BudgetsPage />} />
         <Route path="goals" element={<GoalsPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+        <Route path="insights" element={<AiInsightsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
