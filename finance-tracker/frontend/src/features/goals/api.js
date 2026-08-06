@@ -1,15 +1,12 @@
 import http from "../../lib/http";
+import { normalizeList } from "../../lib/api-pagination";
 
 const GOALS_URL = "/api/finance/saving-goals/";
-
-function unwrapList(data) {
-  return Array.isArray(data) ? data : data?.results ?? [];
-}
 
 export const goalsApi = {
   async list(params = {}) {
     const { data } = await http.get(GOALS_URL, { params });
-    return unwrapList(data);
+    return normalizeList(data);
   },
 
   async create(payload) {

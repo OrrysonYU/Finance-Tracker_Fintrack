@@ -1,14 +1,11 @@
 import http from "../../lib/http";
+import { normalizeList } from "../../lib/api-pagination";
 
 const AI_INSIGHTS_URL = "/api/ai-insights";
 const TRANSACTIONS_URL = "/api/finance/transactions/";
 const MAX_SUGGESTIONS = 3;
 
 export const AI_INSIGHTS_QUERY_KEY = ["dashboard-ai-insights"];
-
-function unwrapList(data) {
-  return Array.isArray(data) ? data : data?.results ?? [];
-}
 
 async function getSpendingInsights() {
   const { data } = await http.get(`${AI_INSIGHTS_URL}/spending-insights/`);
@@ -33,7 +30,7 @@ async function getCategorySuggestions() {
   const { data } = await http.get(TRANSACTIONS_URL, {
     params: { ordering: "-timestamp" },
   });
-  const candidates = unwrapList(data)
+  const candidates = normalizeList(data)
     .filter(
       (transaction) =>
         transaction.category == null && transaction.description?.trim()

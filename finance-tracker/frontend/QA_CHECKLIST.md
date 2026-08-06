@@ -183,11 +183,82 @@ Representative screen-reader coverage should include NVDA with Chrome or Firefox
 - [ ] Date, numeric, email, and currency fields expose appropriate mobile keyboards.
 - [ ] Hover-only information has an equivalent keyboard/touch path.
 
-## 10. Runtime and final sign-off
+## 10. Resilience and failure drills
+
+Run these drills against a local production preview or a dedicated QA environment. Never run destructive mutation tests against production data. Record the route, injected condition, observed result, console output, and recovery result for each drill.
+
+### React rendering and route failures
+
+Use a temporary local-only component that throws during render and substitute it for one lazy route element in `src/app/AppRoutes.jsx`. The smallest fixture is:
+
+```jsx
+function QARenderFailure() {
+  throw new Error("QLT-002 render failure drill");
+}
+```
+
+Restore the route and remove the fixture immediately after the drill; `git diff` must show no fixture before sign-off.
+
+- [ ] Opening the injected route shows the branded recovery screen instead of a blank page or browser error.
+- [ ] The recovery copy contains no stack trace, exception message, endpoint, token, user record, or other technical detail.
+- [ ] Focus moves to the recovery heading, then Tab reaches **Retry** and **Return to Dashboard** in visual order.
+- [ ] **Retry** clears the captured failure and renders the route after the injected throw is disabled.
+- [ ] **Return to Dashboard** performs a clean dashboard navigation/reload and preserves the authenticated session where valid.
+- [ ] Browser Back or navigation to a different path resets the route boundary and does not leave stale recovery UI behind.
+- [ ] Repeat once for an authenticated route and once for an authentication route.
+- [ ] Repeat with `prefers-reduced-motion: reduce`; recovery remains immediate, legible, and fully operable.
+- [ ] A rejected or missing lazy-loaded route chunk reaches the same safe fallback, and a fresh deployment/reload can recover it.
+
+### Network and API failures
+
+Use browser request blocking, offline mode, or a QA proxy to test each condition. Do not edit endpoint URLs in committed source.
+
+| Failure | Expected result |
+| --- | --- |
+| Offline or DNS failure | The affected feature shows a contextual error and retry action; the shell remains usable. |
+| HTTP 400/422 | The form remains open, entered values are preserved, and useful validation is associated with the affected field or form. |
+| HTTP 401 with valid refresh token | One refresh attempt completes and the original request resumes without duplicate mutations. |
+| HTTP 401 with invalid refresh token | Tokens are cleared once, the session-expired message is shown, and sign-in is available. |
+| HTTP 403 | The user sees a safe failure state; restricted content and technical response details are not exposed. |
+| HTTP 404 | The affected record/action fails locally without crashing the route. |
+| HTTP 409 | The conflicting create/update/delete remains recoverable and is not silently reported as success. |
+| HTTP 429 | Duplicate requests stop; retry remains possible after the service allows it. |
+| HTTP 500/502/503/504 | Stable content remains where designed, a retry is offered, and no optimistic mutation is falsely confirmed. |
+| Timeout or aborted request | Pending controls become usable again and the user can retry without reloading the whole application. |
+| Partial dashboard/AI failure | Independent panels degrade independently and core finance workflows remain usable. |
+
+- [ ] Retry does not create duplicate accounts, transactions, budgets, goals, or authentication submissions.
+- [ ] Query retry behavior does not create a request storm; mutations are never automatically repeated without an explicit safe design.
+- [ ] Loading indicators end after terminal failures and `aria-busy` is cleared.
+- [ ] Error messages do not claim data is saved, deleted, or refreshed unless the server confirmed it.
+- [ ] Returning online and choosing retry restores the feature without stale or duplicated rows.
+
+### Missing, malformed, and extreme data
+
+Use QA fixtures or response overrides; never alter production records solely for fault injection.
+
+- [ ] Test `null`, omitted optional fields, empty objects, empty arrays, and paginated responses with no `results`.
+- [ ] Test a collection field with an invalid non-array value and an item missing its identifier or display label.
+- [ ] Test invalid dates, unknown enum values, non-numeric amounts, zero, negative values, and very large values.
+- [ ] Test mixed currencies, long Unicode labels, right-to-left text, emoji, and descriptions without whitespace.
+- [ ] Invalid optional data produces a neutral placeholder or contained recovery state; it never produces `NaN`, `Invalid Date`, `[object Object]`, or a blank application.
+- [ ] Invalid critical data is contained by the route boundary, does not expose the payload, and recovery actions remain operable.
+- [ ] Tables, charts, summaries, and mobile cards agree after valid data is restored and refreshed.
+
+### Failure evidence and cleanup
+
+- [ ] Capture the request/correlation identifier when the API provides one, without recording access tokens or personal financial data.
+- [ ] Record whether the failure was caught by a feature state, route boundary, or global boundary.
+- [ ] Confirm no uncaught promise rejection remains after each API drill.
+- [ ] Remove all temporary fault fixtures, request overrides, local storage flags, screenshots, logs, and proxy rules.
+- [ ] Run `git status --short`, lint, and the production build again after cleanup.
+
+## 11. Runtime and final sign-off
 
 - [ ] Review every primary route in the production build, not only the development server.
 - [ ] Direct-refresh every route and confirm lazy-loaded chunks resolve successfully.
 - [ ] Browser console contains no React warnings, uncaught exceptions, failed asset loads, or accessibility-related component warnings.
+- [ ] Expected boundary drills produce one diagnosable caught error only; no repeated render loop or sensitive data appears in logging.
 - [ ] Network failures produce intentional UI states rather than blank regions or unhandled errors.
 - [ ] No unexpected layout shift occurs after fonts, data, or route chunks load.
 - [ ] Existing APIs, routing, mutations, query invalidation, and financial calculations behave unchanged.
@@ -199,4 +270,5 @@ Representative screen-reader coverage should include NVDA with Chrome or Firefox
 - Frontend engineering:
 - Accessibility:
 - QA:
+- Resilience drills completed by/date:
 - Production UI status: Ready / Ready with accepted non-blockers / Not ready

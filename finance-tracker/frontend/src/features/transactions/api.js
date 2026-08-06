@@ -1,18 +1,18 @@
 import http from "../../lib/http";
-import { fetchAllPages, normalizePage } from "../../lib/api-pagination";
+import {
+  fetchAllPages,
+  normalizeList,
+  normalizePage,
+} from "../../lib/api-pagination";
 
 const TRANSACTIONS_URL = "/api/finance/transactions/";
 const ACCOUNTS_URL = "/api/finance/accounts/";
 const CATEGORIES_URL = "/api/finance/categories/";
 
-function unwrapList(data) {
-  return Array.isArray(data) ? data : data?.results ?? [];
-}
-
 export const transactionsApi = {
   async list(params = {}) {
     const { data } = await http.get(TRANSACTIONS_URL, { params });
-    return unwrapList(data);
+    return normalizeList(data);
   },
 
   async listPage(params = {}) {

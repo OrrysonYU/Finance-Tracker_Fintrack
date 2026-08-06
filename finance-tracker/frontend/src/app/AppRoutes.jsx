@@ -5,6 +5,7 @@ import { AppShell } from "../components/layout";
 import { StateMessage } from "../components/ui";
 import { useAuth } from "../context/useAuth";
 import { AuthPageSkeleton } from "../features/auth/components/AuthPageSkeleton";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 const AccountsPage = lazy(() => import("../features/accounts/AccountsWorkspace"));
 const AiInsightsPage = lazy(() => import("../features/ai-insights/AiInsightsPage"));
@@ -85,44 +86,46 @@ export function AppRoutes() {
   }, [pathname]);
 
   return (
-    <Routes>
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <AuthRouteContent>
-              <LoginPage />
-            </AuthRouteContent>
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <PublicRoute>
-            <AuthRouteContent>
-              <RegisterPage />
-            </AuthRouteContent>
-          </PublicRoute>
-        }
-      />
-      <Route
-        path="/"
-        element={
-          <PrivateRoute>
-            <AppShell />
-          </PrivateRoute>
-        }
-      >
-        <Route index element={<DashboardPage />} />
-        <Route path="accounts" element={<AccountsPage />} />
-        <Route path="transactions" element={<TransactionsPage />} />
-        <Route path="budgets" element={<BudgetsPage />} />
-        <Route path="goals" element={<GoalsPage />} />
-        <Route path="reports" element={<ReportsPage />} />
-        <Route path="insights" element={<AiInsightsPage />} />
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <ErrorBoundary resetKeys={[pathname]}>
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <AuthRouteContent>
+                <LoginPage />
+              </AuthRouteContent>
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <PublicRoute>
+              <AuthRouteContent>
+                <RegisterPage />
+              </AuthRouteContent>
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <AppShell />
+            </PrivateRoute>
+          }
+        >
+          <Route index element={<DashboardPage />} />
+          <Route path="accounts" element={<AccountsPage />} />
+          <Route path="transactions" element={<TransactionsPage />} />
+          <Route path="budgets" element={<BudgetsPage />} />
+          <Route path="goals" element={<GoalsPage />} />
+          <Route path="reports" element={<ReportsPage />} />
+          <Route path="insights" element={<AiInsightsPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }

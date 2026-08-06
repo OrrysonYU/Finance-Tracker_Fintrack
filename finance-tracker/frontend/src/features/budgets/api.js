@@ -1,11 +1,8 @@
 import http from "../../lib/http";
+import { normalizeList } from "../../lib/api-pagination";
 
 const BUDGETS_URL = "/api/budgets/budgets/";
 const CATEGORIES_URL = "/api/finance/categories/";
-
-function unwrapList(data) {
-  return Array.isArray(data) ? data : data?.results ?? [];
-}
 
 function buildBudgetPayload(payload) {
   const request = {
@@ -34,7 +31,7 @@ export const budgetPeriods = [
 export const budgetsApi = {
   async list() {
     const { data } = await http.get(BUDGETS_URL);
-    return unwrapList(data);
+    return normalizeList(data);
   },
 
   async create(payload) {
@@ -51,7 +48,7 @@ export const budgetsApi = {
 export const budgetSupportApi = {
   async listExpenseCategories() {
     const { data } = await http.get(CATEGORIES_URL);
-    return unwrapList(data).filter(
+    return normalizeList(data).filter(
       (category) => category.category_type === "EXPENSE" && category.is_active
     );
   },
