@@ -20,3 +20,6 @@ finance-tracker/ml/.venv/
 finance-tracker/ml/private-exports/
 finance-tracker/ml/artifacts/
 finance-tracker/**/*.jsonl
+
+# Local bootstrap runtime metadata and logs
+finance-tracker/.fintrack/
