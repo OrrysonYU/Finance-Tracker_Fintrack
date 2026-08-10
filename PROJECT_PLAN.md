@@ -913,3 +913,619 @@ Note: every task below is intended to fit within one focused 30-90 minute sessio
 - Why this comes first: We need one agreed structure before touching runtime code, dependencies, or database models. This keeps the rebuild safe and reversible.
 - Commit message format: `[FOUNDATION] Add canonical rebuild skeleton and architecture notes`
 - Push note: A Git remote is not configured yet. Before enforcing the required push step, add an `origin` remote for this repo.
+
+# PHASE 2 — Product Intelligence, Security & SaaS Evolution
+
+## Phase 2 Objective
+
+Transform Fintrack from a polished personal finance tracker into a secure, intelligent, connected and production-grade SaaS finance platform.
+
+Phase 2 builds on the completed Phase 1 foundation without unnecessarily rewriting stable architecture, APIs, business logic, UI components, or workflows. It preserves the Premium Minimal White experience and extends it with a matching Premium Minimal Dark mode.
+
+All tasks below are ordered so dependencies point to completed Phase 1 work or an earlier Phase 2 task. Security, authorization, ownership, privacy, and AI safety are first-class acceptance requirements.
+
+## Module A. Brand & Public Product Experience
+
+### Feature A1. Fintrack Brand System
+
+#### Task P2-BRD-001 - Establish Fintrack brand assets
+- Description: Replace temporary or legacy branding with the finalized Fintrack identity throughout the application, including public assets, authentication, navigation, loading, and error states.
+- Expected output/result: Official logo, favicon, metadata, authentication branding, navigation branding, loading states, and error states consistently use the Fintrack identity, with light and dark variants.
+- Manual test instructions:
+  1. Inspect authentication, navigation, dashboard, loading, and error states.
+  2. Confirm the official Fintrack logo and favicon are used consistently.
+  3. Verify document metadata and light/dark branding assets.
+- Dependencies: UIX-008
+
+#### Task P2-BRD-002 - Build premium public Fintrack landing page
+- Description: Create a production-quality public landing page for unauthenticated visitors.
+- Expected output/result: A responsive premium SaaS landing experience explains Fintrack's value, accounts, transactions, budgets, goals, reports, AI Insights, AI Assistant, security, and privacy, with Sign In and Create Account CTAs.
+- Manual test instructions:
+  1. Open the landing page while logged out.
+  2. Confirm Hero, product preview, Accounts, Transactions, Budgets, Goals, Reports, AI, Security/Privacy, CTA, and Footer sections render.
+  3. Confirm Sign In links to `/login` and Create Account links to `/register`.
+  4. Test desktop, tablet, and mobile layouts.
+- Dependencies: P2-BRD-001
+
+#### Task P2-BRD-003 - Landing page SEO and responsive hardening
+- Description: Make the public landing experience production-ready for search, sharing, accessibility, and performance.
+- Expected output/result: Semantic, responsive, accessible, performant landing page with document metadata and Open Graph support.
+- Manual test instructions:
+  1. Inspect title, description, canonical, and Open Graph metadata.
+  2. Test mobile navigation and keyboard navigation.
+  3. Verify responsive behavior and that images do not cause layout shift.
+- Dependencies: P2-BRD-002
+
+## Module B. Theme & Design System
+
+### Feature B1. Dual Theme System
+
+#### Task P2-THM-001 - Implement production light/dark theme architecture
+- Description: Extend the existing Premium Minimal White design system into a complete dual-theme architecture using shared tokens.
+- Expected output/result: Light mode remains the primary established visual language; Premium Minimal Dark preserves hierarchy, restraint, typography, spacing, component hierarchy, and accessible contrast without excessive gradients or neon effects.
+- Manual test instructions:
+  1. Inspect all major application routes.
+  2. Toggle between light and dark themes.
+  3. Confirm cards, forms, charts, navigation, dialogs, and states remain coherent and readable.
+- Dependencies: UIX-008
+
+#### Task P2-THM-002 - Add user theme preference controls
+- Description: Allow users to select Light, Dark, or System theme.
+- Expected output/result: The selected preference persists across sessions and routes without visible theme flashing.
+- Manual test instructions:
+  1. Select Light, reload, and verify it persists.
+  2. Select Dark, reload, and verify it persists.
+  3. Select System and change the operating-system preference; verify the app follows it.
+- Dependencies: P2-THM-001
+
+#### Task P2-THM-003 - Complete theme accessibility audit
+- Description: Audit charts, dialogs, forms, navigation, states, skeletons, and AI surfaces across both themes.
+- Expected output/result: Both themes meet readable contrast and focus requirements with no visual hierarchy regressions.
+- Manual test instructions:
+  1. Navigate every major route in both themes.
+  2. Check keyboard focus, disabled, error, success, loading, and empty states.
+  3. Verify chart legends, labels, and tooltips remain distinguishable.
+- Dependencies: P2-THM-002
+
+## Module C. Identity & Account Center
+
+### Feature C1. User Profile
+
+#### Task P2-AUTH-001 - Build production Account Center
+- Description: Create a coherent authenticated workspace for profile, preferences, notifications, security, and privacy/data management.
+- Expected output/result: Users can manage profile picture, name, display name, username, email, phone, country, timezone, currency, preferences, notifications, security, and privacy from one account center.
+- Manual test instructions:
+  1. Open the account center and inspect each required area.
+  2. Edit profile and preference values and verify persistence after reload.
+  3. Confirm another user cannot view or modify the profile.
+  4. Test desktop and mobile layouts.
+- Dependencies: P2-THM-003
+
+#### Task P2-AUTH-002 - Secure profile picture management
+- Description: Implement secure profile image upload, validation, preview, replacement, and deletion.
+- Expected output/result: Only valid, bounded image uploads are accepted, safely stored, associated with the authenticated user, and removable without leaving an unauthorized accessible copy.
+- Manual test instructions:
+  1. Upload a valid supported image and verify preview and persistence.
+  2. Try unsupported types, oversized files, and malformed content; confirm rejection.
+  3. Replace and delete the image.
+  4. Attempt access using another user's session and confirm denial.
+- Dependencies: P2-AUTH-001
+
+## Module D. Authentication & Identity Security
+
+### Feature D1. Production Authentication Hardening
+
+#### Task P2-SEC-001 - Harden authentication lifecycle
+- Description: Audit and harden password authentication, JWT lifecycle, refresh tokens, logout, expiration, password recovery, email verification, and brute-force protection.
+- Expected output/result: Authentication resists common unauthorized-access attacks, invalid tokens are rejected, recovery and verification are safe, and repeated failures are throttled or locked down.
+- Manual test instructions:
+  1. Test registration, login, logout, token expiration, and refresh.
+  2. Test invalid credentials and repeated failures.
+  3. Test password recovery and email verification, including expired/used links.
+  4. Confirm revoked or expired tokens cannot call protected endpoints.
+- Dependencies: P2-AUTH-001
+
+#### Task P2-SEC-002 - Harden username policy
+- Description: Implement username normalization, uniqueness, length limits, Unicode normalization, confusable-character protection, reserved names, and separation of username from display name.
+- Expected output/result: Reserved administrative/system identities, including `root`, `admin`, `administrator`, `system`, and equivalent variants, cannot be impersonated while display names support Unicode and emoji.
+- Manual test instructions:
+  1. Try duplicate, too-short, too-long, whitespace, case-variant, Unicode-confusable, and reserved usernames.
+  2. Confirm rejected names return clear validation errors.
+  3. Confirm Unicode/emoji display names remain allowed and distinct from usernames.
+- Dependencies: P2-SEC-001
+
+#### Task P2-SEC-003 - Implement MFA
+- Description: Add a secure multi-factor authentication architecture with enrollment, challenge, disablement, and recovery codes.
+- Expected output/result: Users can enable MFA, authenticate with the second factor, regenerate/revoke recovery codes, and recover access without weakening password or token security.
+- Manual test instructions:
+  1. Enroll MFA and complete a login challenge.
+  2. Try an invalid and reused code; confirm rejection.
+  3. Use a recovery code once, then confirm it cannot be reused.
+  4. Disable MFA only after re-authentication.
+- Dependencies: P2-SEC-001
+
+#### Task P2-SEC-004 - Implement session and device management
+- Description: Give users visibility and control over active sessions, device information, revocation, logout-all-other-devices, and authentication activity.
+- Expected output/result: Session records are user-scoped, revocation takes effect promptly, and activity does not expose secrets.
+- Manual test instructions:
+  1. Sign in from two browsers/devices and inspect the session list.
+  2. Revoke one session and confirm its token no longer works.
+  3. Use logout-all-other-devices and verify only the current session remains.
+  4. Review authentication activity for sanitized device and time data.
+- Dependencies: P2-SEC-003
+
+## Module E. Google & Apple Authentication
+
+### Feature E1. Social Authentication
+
+#### Task P2-OAUTH-001 - Implement Google OAuth/OIDC
+- Description: Add secure Google authentication using standard OAuth/OIDC practices.
+- Expected output/result: Google login validates state and identity, handles secure callbacks, links verified identities, and safely handles duplicate accounts.
+- Manual test instructions:
+  1. Start the Google sign-in flow and complete a valid callback.
+  2. Try a missing or mismatched state and confirm rejection.
+  3. Test an email that already belongs to a password account and verify the documented linking/duplicate behavior.
+- Dependencies: P2-SEC-004
+
+#### Task P2-OAUTH-002 - Implement Sign in with Apple
+- Description: Add secure Apple Sign In using OIDC, including private relay email handling, identity verification, account linking, and first-login handling.
+- Expected output/result: Apple identities create or link the correct Fintrack account without storing unnecessary provider secrets.
+- Manual test instructions:
+  1. Complete first-time Apple sign-in and verify account creation.
+  2. Repeat sign-in when Apple supplies a private relay address.
+  3. Test invalid callback claims and confirm rejection.
+- Dependencies: P2-OAUTH-001
+
+#### Task P2-OAUTH-003 - Implement identity linking
+- Description: Allow email/password, Google, and Apple identities to belong safely to one Fintrack account.
+- Expected output/result: Authenticated users can link and unlink identities after re-authentication without accidental duplicate accounts or orphaned access.
+- Manual test instructions:
+  1. Link Google and Apple identities to an existing account.
+  2. Sign in through each linked identity and verify the same user data appears.
+  3. Attempt linking an identity owned by another account and confirm denial.
+  4. Prevent unlinking the final usable authentication method.
+- Dependencies: P2-OAUTH-002
+
+## Module F. Financial Account Connectivity
+
+### Feature F1. Connected Financial Accounts
+
+#### Task P2-CON-001 - Design provider abstraction
+- Description: Create a provider-independent architecture for connecting banks and financial wallets without coupling the core domain to one provider.
+- Expected output/result: Provider interfaces cover authorization, consent, account discovery, transactions, balances, sync, disconnect, and revocation while core finance models remain provider-neutral.
+- Manual test instructions:
+  1. Inspect the provider interface and one mock provider implementation.
+  2. Run the mock contract tests.
+  3. Confirm core finance code imports the abstraction rather than provider-specific classes.
+- Dependencies: P2-SEC-004
+
+#### Task P2-CON-002 - Implement secure connection workflow
+- Description: Implement provider authorization, consent, callback, secure credential/token storage, account discovery, disconnect, and revocation. Fintrack must never request or store a bank password directly.
+- Expected output/result: Connection secrets are encrypted or delegated to the provider, callbacks are validated, consent is recorded, and disconnect revokes access.
+- Manual test instructions:
+  1. Complete a mock authorization and callback.
+  2. Confirm no bank-password field or value is accepted or persisted.
+  3. Inspect stored credentials for encryption/tokenization and user ownership.
+  4. Disconnect and confirm provider revocation and local cleanup.
+- Dependencies: P2-CON-001
+
+#### Task P2-CON-003 - Implement account synchronization engine
+- Description: Synchronize balances and transactions reliably with sync status, retries, duplicate detection, reconciliation, and manual synchronization.
+- Expected output/result: Repeated syncs are idempotent, transient failures retry safely, duplicates are not created, and discrepancies are surfaced for review.
+- Manual test instructions:
+  1. Run an initial mock sync and verify balances and transactions.
+  2. Run it again and confirm no duplicates.
+  3. Simulate a transient failure and verify retry/status behavior.
+  4. Simulate a reconciliation mismatch and verify it is reported.
+- Dependencies: P2-CON-002
+
+#### Task P2-CON-004 - Build connected accounts workspace
+- Description: Create a premium interface for managing Connected, Syncing, Needs Attention, and Disconnected accounts.
+- Expected output/result: Users can connect, inspect status, manually sync, resolve attention states, and disconnect accounts with clear ownership-safe controls.
+- Manual test instructions:
+  1. View each connection state using mock data.
+  2. Trigger manual sync and confirm progress and completion/error feedback.
+  3. Disconnect an account and verify it disappears or shows the documented state.
+  4. Confirm another user cannot see the connection.
+- Dependencies: P2-CON-003
+
+## Module G. AI Intelligence Platform
+
+### Feature G1. Production AI Infrastructure
+
+#### Task P2-AI-001 - Build AI provider abstraction
+- Description: Create a configurable AI provider layer with timeouts, retries, rate limits, cost controls, feature flags, and graceful failure handling. Provider configuration must not be hardcoded into financial business logic.
+- Expected output/result: AI callers use a provider-neutral interface, enforce request budgets and timeouts, and return safe degraded responses when providers fail.
+- Manual test instructions:
+  1. Run against a mock provider and confirm the interface contract.
+  2. Simulate timeout, provider error, rate limit, and malformed response.
+  3. Confirm retries are bounded and no provider secret appears in logs or responses.
+- Dependencies: P2-SEC-004
+
+#### Task P2-AI-002 - Build deterministic financial intelligence layer
+- Description: Calculate spending totals, category changes, budget utilization, goal progress, income/expense ratios, and cash-flow trends through application logic before AI interpretation.
+- Expected output/result: Verified, user-scoped financial facts are available as typed inputs; LLM output is never authoritative for calculations.
+- Manual test instructions:
+  1. Seed known income, expenses, budgets, and goals.
+  2. Compare every returned fact with an independent manual calculation.
+  3. Confirm date boundaries, empty data, and multi-account ownership are handled.
+  4. Confirm an AI provider failure does not change the facts.
+- Dependencies: P2-AI-001
+
+## Module H. AI Financial Agents
+
+#### Task P2-AI-003 - Spending Analyst Agent
+- Description: Analyze spending trends, category changes, recurring expenses, and unusual spending from verified facts.
+- Expected output/result: Explainable, user-scoped spending observations include the supporting period and categories and never invent totals.
+- Manual test instructions:
+  1. Seed month-over-month category changes and recurring expenses.
+  2. Request analysis and compare statements with deterministic facts.
+  3. Verify empty and provider-failure responses are safe.
+- Dependencies: P2-AI-002
+
+#### Task P2-AI-004 - Budget Analyst Agent
+- Description: Analyze utilization, projected overspending, remaining budgets, and category risk.
+- Expected output/result: Budget analysis identifies risk using verified utilization and clearly distinguishes projections from actuals.
+- Manual test instructions:
+  1. Create under-, near-, and over-budget categories.
+  2. Request analysis and verify each status against utilization math.
+  3. Confirm projections are labeled and unsupported advice is not presented as fact.
+- Dependencies: P2-AI-002
+
+#### Task P2-AI-005 - Savings & Goals Agent
+- Description: Analyze goal progress, contribution trends, and projected completion.
+- Expected output/result: Goal summaries use verified contributions and state assumptions behind projections.
+- Manual test instructions:
+  1. Seed goals at different progress levels and contribution histories.
+  2. Compare output to manual progress calculations.
+  3. Test a goal with no contributions and an invalid target date.
+- Dependencies: P2-AI-002
+
+#### Task P2-AI-006 - Financial Health Agent
+- Description: Generate explainable financial-health summaries from verified financial data.
+- Expected output/result: Health summaries cite the underlying measures, avoid unsupported diagnoses, and provide cautious actionable guidance.
+- Manual test instructions:
+  1. Run the agent with positive, mixed, and sparse financial profiles.
+  2. Verify cited metrics match deterministic facts.
+  3. Confirm no financial fact is generated when source data is unavailable.
+- Dependencies: P2-AI-002
+
+#### Task P2-AI-007 - Anomaly Detection Agent
+- Description: Identify unusual transactions and spending patterns using deterministic rules plus AI interpretation where appropriate.
+- Expected output/result: Candidate anomalies are rule-derived, reviewable, user-scoped, and clearly distinguished from confirmed fraud.
+- Manual test instructions:
+  1. Seed normal transactions and one amount/category outlier.
+  2. Confirm the outlier is flagged with explainable evidence.
+  3. Confirm normal transactions and another user's outlier are not incorrectly exposed.
+- Dependencies: P2-AI-002
+
+## Module I. Fintrack AI Assistant
+
+### Feature I1. Conversational Financial Assistant
+
+#### Task P2-AI-008 - Build Fintrack AI Assistant
+- Description: Build a dedicated conversational assistant for authenticated users covering financial, account, transaction, budget, goal, and report questions, contextual answers, suggested prompts, and conversation history.
+- Expected output/result: Authenticated users receive contextual, bounded answers with conversation history isolated to their account and safe fallback behavior.
+- Manual test instructions:
+  1. Ask supported account, transaction, budget, goal, and report questions.
+  2. Verify suggested prompts and conversation history.
+  3. Ask an unsupported or ambiguous question and confirm a safe clarification/fallback.
+  4. Confirm logged-out users cannot access the assistant.
+- Dependencies: P2-AI-003, P2-AI-004, P2-AI-005, P2-AI-006
+
+#### Task P2-AI-009 - Implement secure AI tool calling
+- Description: Create controlled tools such as `get_accounts()`, `get_transactions()`, `get_budget_status()`, `get_goals()`, `get_monthly_report()`, and `get_spending_by_category()`.
+- Expected output/result: The LLM has no direct database access; every tool requires authentication, enforces object ownership, validates arguments, limits returned data, and records safe audit context.
+- Manual test instructions:
+  1. Call each tool with a valid authenticated user and verify correct scoped data.
+  2. Call tools logged out and confirm denial.
+  3. Attempt another user's IDs, broad queries, invalid arguments, and excessive ranges; confirm rejection or bounded results.
+  4. Inspect logs for absence of tokens and sensitive payloads.
+- Dependencies: P2-AI-008
+
+#### Task P2-AI-010 - Add explainable AI source references
+- Description: Expose trustworthy context such as transaction counts and links to relevant Fintrack records.
+- Expected output/result: Responses identify the source period/records and links resolve only for the owning user.
+- Manual test instructions:
+  1. Ask a question whose answer has known supporting transactions.
+  2. Verify counts, periods, and links match the source data.
+  3. Open a source link as another user and confirm denial.
+- Dependencies: P2-AI-009
+
+## Module J. Personal Documents & AI Knowledge
+
+#### Task P2-DOC-001 - Secure document management
+- Description: Allow users to upload supported PDF, CSV, and image financial documents with validation, size limits, secure storage, ownership enforcement, and deletion.
+- Expected output/result: Malicious, unsupported, oversized, and cross-user document access attempts are rejected; valid documents can be listed, downloaded, and deleted by their owner.
+- Manual test instructions:
+  1. Upload one valid PDF, CSV, and supported image.
+  2. Try unsupported type, oversized file, malformed file, and path-traversal filename.
+  3. Download and delete a valid document.
+  4. Attempt access from another user and confirm denial.
+- Dependencies: P2-AUTH-001
+
+#### Task P2-DOC-002 - Document intelligence pipeline
+- Description: Build the controlled `Upload → Extract → Validate → Index → Retrieve → AI Assistant` pipeline.
+- Expected output/result: Extracted content is validated, indexed with ownership metadata, traceable to its source document, and available to the assistant only after successful processing.
+- Manual test instructions:
+  1. Upload representative PDF, CSV, and image documents.
+  2. Inspect processing states and extracted fields.
+  3. Confirm malformed or unsupported extraction fails safely without indexing untrusted content.
+  4. Ask the assistant a question grounded in an indexed document.
+- Dependencies: P2-DOC-001, P2-AI-009
+
+#### Task P2-DOC-003 - Permission-aware retrieval
+- Description: Scope document retrieval strictly to the authenticated user and ensure prompt injection or AI instructions cannot bypass authorization.
+- Expected output/result: Retrieval filters by ownership at every layer, ignores untrusted document instructions, and prevents cross-user citations or tool calls.
+- Manual test instructions:
+  1. Index documents for two users with similar names.
+  2. Query each account and verify only its documents are returned.
+  3. Include prompt-injection text in a document and confirm it cannot change permissions or invoke unauthorized tools.
+- Dependencies: P2-DOC-002
+
+## Module K. AI Safety & Privacy
+
+#### Task P2-AI-011 - AI security controls
+- Description: Protect AI features against prompt injection, data exfiltration, unauthorized tool execution, malicious documents, hallucinated financial facts, and excessive requests.
+- Expected output/result: Inputs are bounded and sanitized, tools are allow-listed and authorized, outputs are checked against verified facts, and abuse is rate-limited and auditable.
+- Manual test instructions:
+  1. Test prompt-injection, data-exfiltration, malicious-document, and unauthorized-tool scenarios.
+  2. Confirm each attempt is blocked or safely contained.
+  3. Verify hallucinated totals are rejected or marked uncertain.
+  4. Trigger request limits and confirm graceful throttling.
+- Dependencies: P2-AI-009, P2-DOC-003
+
+#### Task P2-AI-012 - AI privacy controls
+- Description: Define and implement AI data handling, provider transmission, retention, deletion, consent, and logging policies.
+- Expected output/result: Users receive clear controls and policy behavior; provider payloads, retention, deletion, and audit logs follow documented privacy rules without exposing secrets.
+- Manual test instructions:
+  1. Inspect consent and privacy settings.
+  2. Opt out and verify AI requests stop or degrade safely.
+  3. Request deletion/export and verify AI-related data handling.
+  4. Inspect sanitized logs and provider payload boundaries.
+- Dependencies: P2-AI-011
+
+## Module L. Production Security
+
+#### Task P2-SEC-005 - Production security hardening
+- Description: Harden deployment configuration with strict CORS, HTTPS, HSTS, secure cookies, security headers, rate limiting, secret management, production DEBUG protection, and allowed-host configuration.
+- Expected output/result: Production settings fail closed, enforce secure transport and origins, keep secrets external, and reject unsafe host/debug configurations.
+- Manual test instructions:
+  1. Run production configuration checks with valid settings.
+  2. Try an untrusted origin, insecure cookie/HTTP request, invalid host, and DEBUG-enabled production configuration.
+  3. Confirm security headers, HSTS, rate limits, and secret loading are present.
+- Dependencies: P2-SEC-004
+
+#### Task P2-SEC-006 - Authorization audit
+- Description: Audit object-level authorization across accounts, transactions, budgets, goals, reports, documents, AI tools, profiles, and connected accounts.
+- Expected output/result: Every sensitive resource has explicit authenticated-user ownership checks and cross-user access is denied consistently.
+- Manual test instructions:
+  1. Create equivalent resources for two users.
+  2. Attempt read, update, delete, export, tool, and source-link access across users.
+  3. Confirm all unauthorized requests return the documented denial response without leaking existence or metadata.
+- Dependencies: P2-SEC-005
+
+## Module M. Data & Database Productionization
+
+#### Task P2-DATA-001 - PostgreSQL production readiness
+- Description: Prepare the backend for production PostgreSQL deployment, including configuration, migrations, pooling, health checks, and local/test compatibility.
+- Expected output/result: A clean PostgreSQL instance can migrate and serve the application without SQLite-only behavior or data loss.
+- Manual test instructions:
+  1. Start a clean PostgreSQL database using documented configuration.
+  2. Run migrations and backend checks.
+  3. Exercise authentication and representative finance CRUD/report flows.
+  4. Confirm test settings remain isolated.
+- Dependencies: P2-SEC-005
+
+#### Task P2-DATA-002 - Database performance audit
+- Description: Profile actual application queries and address measured N+1 queries, indexing problems, and unnecessary database work.
+- Expected output/result: Measured hot paths have documented query counts/latency, appropriate indexes or query improvements, and regression coverage.
+- Manual test instructions:
+  1. Profile dashboard, transactions, reports, sync, and AI-tool queries with representative data.
+  2. Record before/after query counts and latency.
+  3. Confirm no N+1 regressions in the automated performance checks.
+- Dependencies: P2-DATA-001
+
+#### Task P2-DATA-003 - Multi-currency architecture
+- Description: Establish account currency, reporting/base currency, exchange rates, conversion dates, precision rules, and multi-currency reporting.
+- Expected output/result: Account values remain in source currency while reports expose documented conversions using dated rates and auditable rounding.
+- Manual test instructions:
+  1. Create accounts and transactions in at least two currencies.
+  2. Configure rates for different dates and verify converted totals manually.
+  3. Test missing/stale rates and confirm the documented fallback/error state.
+- Dependencies: P2-DATA-001
+
+## Module N. Observability
+
+#### Task P2-OBS-001 - Production error monitoring
+- Description: Connect frontend error boundaries and backend errors to production-safe monitoring with sanitized metadata, route/release context, and no financial or authentication secrets.
+- Expected output/result: Representative frontend and backend failures create traceable, sanitized monitoring events.
+- Manual test instructions:
+  1. Trigger a frontend error and backend 5xx in a non-production environment.
+  2. Inspect events for route/release context.
+  3. Confirm passwords, tokens, account numbers, and transaction details are absent or redacted.
+- Dependencies: P2-SEC-006
+
+#### Task P2-OBS-002 - Structured logging
+- Description: Implement structured application logging without exposing passwords, tokens, or sensitive financial information.
+- Expected output/result: Logs are machine-readable, correlation-friendly, level-controlled, and consistently redacted.
+- Manual test instructions:
+  1. Exercise authentication, finance, sync, and AI flows.
+  2. Inspect structured log fields and correlation identifiers.
+  3. Search logs for secrets and verify redaction.
+- Dependencies: P2-OBS-001
+
+#### Task P2-OBS-003 - Application monitoring
+- Description: Monitor API failures, latency, authentication failures, AI failures, synchronization failures, frontend exceptions, and database errors.
+- Expected output/result: Dashboards/alerts cover the required signals with actionable thresholds and sanitized payloads.
+- Manual test instructions:
+  1. Trigger each monitored failure class in staging.
+  2. Verify metrics, traces, and alerts appear.
+  3. Confirm alert payloads contain no sensitive data.
+- Dependencies: P2-OBS-002
+
+## Module O. Automated Quality
+
+#### Task P2-QA-001 - Implement Playwright E2E coverage
+- Description: Automate registration, login, OAuth, dashboard, accounts, transactions, budgets, goals, reports, profile, and AI Assistant journeys.
+- Expected output/result: Critical authenticated and unauthenticated journeys run repeatably against isolated test services.
+- Manual test instructions:
+  1. Run the Playwright suite from a clean test environment.
+  2. Confirm every required flow passes.
+  3. Confirm failures capture useful artifacts without storing credentials or financial secrets.
+- Dependencies: P2-OAUTH-003, P2-AI-009
+
+#### Task P2-QA-002 - Automated accessibility regression testing
+- Description: Integrate automated accessibility checks using an appropriate framework across public, authenticated, light, and dark experiences.
+- Expected output/result: Accessibility checks run in CI and flag regressions in semantics, keyboard access, labels, focus, and contrast.
+- Manual test instructions:
+  1. Run the accessibility suite across key routes and both themes.
+  2. Confirm intentional violations are resolved or documented with an owner.
+  3. Verify keyboard-only navigation for critical flows.
+- Dependencies: P2-QA-001
+
+#### Task P2-QA-003 - Security regression suite
+- Description: Automate authentication, authorization, ownership, rate-limit, session, file-access, and AI-permission security tests.
+- Expected output/result: Security regressions fail the suite and cross-user isolation is continuously tested.
+- Manual test instructions:
+  1. Run the suite with two isolated users.
+  2. Confirm cross-user reads/writes/deletes, revoked sessions, file access, and unauthorized AI tools fail.
+  3. Confirm rate limits and malformed-input protections are exercised.
+- Dependencies: P2-SEC-006, P2-AI-011
+
+## Module P. CI/CD
+
+#### Task P2-CI-001 - Production quality gates
+- Description: Establish CI gates for linting, frontend tests, backend tests, smoke tests, security tests, and production builds.
+- Expected output/result: Pull requests cannot pass when required quality or security checks fail, and commands are reproducible locally.
+- Manual test instructions:
+  1. Run the complete quality gate locally.
+  2. Submit a controlled failing change and confirm CI blocks it.
+  3. Restore the change and confirm CI passes.
+- Dependencies: P2-QA-001, P2-QA-002, P2-QA-003
+
+#### Task P2-CI-002 - Dependency and secret scanning
+- Description: Add automated dependency vulnerability and secret detection checks.
+- Expected output/result: Vulnerable dependencies and committed secrets are detected before release with documented remediation behavior.
+- Manual test instructions:
+  1. Run both scanners against the repository.
+  2. Introduce safe test fixtures for a known vulnerable dependency pattern and secret pattern.
+  3. Confirm scanners fail, then remove fixtures and confirm they pass.
+- Dependencies: P2-CI-001
+
+## Module Q. Backup & Disaster Recovery
+
+#### Task P2-DR-001 - Production backup strategy
+- Description: Define backup frequency, retention, encryption, storage, RPO, and RTO.
+- Expected output/result: A documented, encrypted, access-controlled backup policy covers database and required user data with owners and verification steps.
+- Manual test instructions:
+  1. Review the policy against configured backup jobs.
+  2. Verify encryption, retention, access restrictions, and sample backup integrity.
+  3. Confirm stated RPO/RTO are measurable.
+- Dependencies: P2-DATA-001
+
+#### Task P2-DR-002 - Restore testing
+- Description: Perform and document an actual database restoration test.
+- Expected output/result: A clean restore succeeds within the target RTO, preserves required data, and documents discrepancies and follow-up actions.
+- Manual test instructions:
+  1. Restore the latest test backup into an isolated PostgreSQL instance.
+  2. Run migrations/checks and representative login, finance, report, and ownership tests.
+  3. Record elapsed restore time and verify it meets RTO.
+- Dependencies: P2-DR-001
+
+## Module R. SaaS Product Experience
+
+#### Task P2-SaaS-001 - Build first-user onboarding
+- Description: Create guided onboarding from Registration → Profile → Currency → First Account → First Transaction → Budget → Goal → Dashboard.
+- Expected output/result: New users can complete the sequence, resume safely, skip optional steps, and arrive at a useful personalized dashboard.
+- Manual test instructions:
+  1. Register a fresh user and complete every step.
+  2. Reload or leave midway and verify resume behavior.
+  3. Test validation, skip, back, and duplicate-submit behavior.
+  4. Confirm onboarding data is owned by the new user.
+- Dependencies: P2-AUTH-001
+
+#### Task P2-SaaS-002 - Build notification center
+- Description: Create a centralized notification experience for budgets, goals, spending, AI, security, and synchronization events.
+- Expected output/result: Notifications are user-scoped, categorized, readable in both themes, deduplicated where appropriate, and link to the relevant Fintrack context.
+- Manual test instructions:
+  1. Trigger one event from each required category.
+  2. Confirm unread/read, dismissal, navigation, and persistence behavior.
+  3. Confirm another user cannot see the notifications.
+- Dependencies: P2-AI-008, P2-CON-004
+
+#### Task P2-SaaS-003 - Data export and account deletion
+- Description: Allow users to export personal/financial data and permanently delete their account and associated data according to defined retention and compliance rules.
+- Expected output/result: Export is complete, portable, ownership-scoped, and protected; deletion requires confirmation/re-authentication, removes associated data safely, and follows documented retention exceptions.
+- Manual test instructions:
+  1. Request an export and verify profile, finance, document, connection, AI, and notification data are included as documented.
+  2. Attempt export as another user and confirm denial.
+  3. Delete a test account after re-authentication and confirm login and owned-data access fail.
+  4. Verify retention/audit exceptions are handled according to policy.
+- Dependencies: P2-AUTH-001, P2-DOC-003
+
+## Phase 2 Completion Criteria
+
+Phase 2 is complete only when Fintrack demonstrates:
+
+### Identity
+- Secure authentication
+- Google authentication
+- Apple authentication
+- MFA
+- Session/device management
+- Profile/account center
+- Secure username policy
+
+### Finance
+- Connected financial accounts
+- Reliable synchronization
+- Multi-currency architecture
+
+### AI
+- Working AI Insights
+- Working specialized financial agents
+- Working AI Assistant
+- Secure tool calling
+- Document intelligence
+- Permission-aware retrieval
+- AI security and privacy controls
+
+### Experience
+- Premium Minimal White
+- Premium Minimal Dark
+- System theme
+- Premium public landing page
+- Final Fintrack branding
+- Responsive experience
+
+### Security
+- Strict CORS
+- HTTPS/HSTS readiness
+- Secure cookies
+- Rate limiting
+- Authorization testing
+- Secret management
+- Cross-user isolation
+
+### Operations
+- PostgreSQL readiness
+- Automated E2E testing
+- Accessibility testing
+- Security regression testing
+- CI/CD quality gates
+- Monitoring
+- Backups
+- Disaster recovery
+
+## Engineering Principle
+
+Phase 2 must prioritize platform integrity over feature count.
+
+The architectural dependency remains:
+
+Identity → Authorization → Financial Data → AI Tools → AI Agents → AI Assistant
+
+The AI layer must never bypass Fintrack's authentication, authorization, or ownership boundaries.
+
+When implementation begins, execute Phase 2 tasks sequentially according to their dependencies. Before modifying code, inspect the current implementation and reuse stable existing architecture wherever appropriate.
