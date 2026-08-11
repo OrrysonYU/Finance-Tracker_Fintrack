@@ -1,6 +1,8 @@
-import { CheckCircle2, Landmark, LockKeyhole } from "lucide-react";
+import { CheckCircle2, LockKeyhole } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
+
+import { FintrackLogo } from "../../../components/brand";
 
 export function AuthLayout({
   asideDescription,
@@ -22,7 +24,7 @@ export function AuthLayout({
       <aside className="auth-shell__story" aria-label="About Fintrack">
         <Link className="auth-brand" to="/login" aria-label="Fintrack sign in">
           <span className="auth-brand__mark" aria-hidden="true">
-            <Landmark size={21} strokeWidth={2} />
+            <FintrackLogo size={48} decorative />
           </span>
           <span>
             <strong>Fintrack</strong>
@@ -66,7 +68,7 @@ export function AuthLayout({
         <div className="auth-shell__mobile-brand">
           <Link className="auth-brand" to="/login" aria-label="Fintrack sign in">
             <span className="auth-brand__mark" aria-hidden="true">
-              <Landmark size={20} />
+              <FintrackLogo size={42} decorative />
             </span>
             <span>
               <strong>Fintrack</strong>

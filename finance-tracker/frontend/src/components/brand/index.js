@@ -1,0 +1,1 @@
+export { FintrackLogo } from "./FintrackLogo";

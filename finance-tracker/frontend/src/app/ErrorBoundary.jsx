@@ -1,6 +1,7 @@
 import { Component, createRef } from "react";
 import { LayoutDashboard, RefreshCcw, ShieldAlert } from "lucide-react";
 
+import { FintrackLogo } from "../components/brand";
 import { Button } from "../components/ui";
 
 function resetKeysChanged(previousKeys = [], nextKeys = []) {
@@ -80,8 +81,8 @@ export class ErrorBoundary extends Component {
     return (
       <main className="error-boundary" aria-labelledby="error-boundary-title">
         <section className="error-boundary__card">
-          <div className="error-boundary__brand" aria-label="Fintrack">
-            F
+          <div className="error-boundary__brand" aria-hidden="true">
+            <FintrackLogo size={52} decorative />
           </div>
           <span className="error-boundary__icon" aria-hidden="true">
             <ShieldAlert size={24} strokeWidth={1.8} />

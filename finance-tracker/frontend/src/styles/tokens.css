@@ -24,6 +24,10 @@
   --color-text-muted: #626f81;
   --color-text-inverse: #ffffff;
 
+  /* Canonical Fintrack treatments for light and dark surfaces. */
+  --color-brand-logo: #172033;
+  --color-brand-logo-inverse: #f8fafc;
+
   /* Brand and semantic roles */
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;

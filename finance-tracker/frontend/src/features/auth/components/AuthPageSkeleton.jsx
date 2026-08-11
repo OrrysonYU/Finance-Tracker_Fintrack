@@ -1,5 +1,4 @@
-import { Landmark } from "lucide-react";
-
+import { FintrackLogo } from "../../../components/brand";
 import { Skeleton, SkeletonGroup } from "../../../components/ui";
 
 export function AuthPageSkeleton() {
@@ -8,7 +7,7 @@ export function AuthPageSkeleton() {
       <aside className="auth-shell__story" aria-hidden="true">
         <span className="auth-brand">
           <span className="auth-brand__mark">
-            <Landmark size={21} />
+            <FintrackLogo size={48} decorative />
           </span>
           <span>
             <strong>Fintrack</strong>

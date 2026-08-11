@@ -460,14 +460,21 @@ textarea:disabled {
 
 .app-brand__mark {
   display: grid;
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: var(--radius-control);
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  box-shadow: var(--shadow-subtle);
+  color: var(--color-brand-logo);
+}
+
+.fintrack-logo {
+  display: block;
+  flex: 0 0 auto;
+  color: var(--color-brand-logo);
+}
+
+.fintrack-logo--inverse {
+  color: var(--color-brand-logo-inverse);
 }
 
 .app-brand__copy {
@@ -659,7 +666,6 @@ textarea:disabled {
   margin: 0;
 }
 
-.app-mobile-header__brand .app-brand__mark,
 .app-mobile-header__brand .app-brand__descriptor {
   display: none;
 }
@@ -811,14 +817,10 @@ textarea:disabled {
 
 .route-loading__brand {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 3.25rem;
+  height: 3.25rem;
   place-items: center;
-  border-radius: var(--radius-control);
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  font-size: 1rem;
-  font-weight: 750;
+  color: var(--color-brand-logo);
 }
 
 /* QLT-002: last-resort runtime recovery */
@@ -854,15 +856,11 @@ textarea:disabled {
 
 .error-boundary__brand {
   display: grid;
-  width: 2.75rem;
-  height: 2.75rem;
+  width: 3.25rem;
+  height: 3.25rem;
   place-items: center;
   margin-bottom: var(--space-8);
-  border-radius: var(--radius-control);
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  font-size: 1rem;
-  font-weight: 750;
+  color: var(--color-brand-logo);
 }
 
 .error-boundary__icon {
@@ -1317,13 +1315,10 @@ textarea:disabled {
 
 .auth-brand__mark {
   display: grid;
-  width: 2.625rem;
-  height: 2.625rem;
+  width: 3rem;
+  height: 3rem;
   place-items: center;
-  border-radius: var(--radius-control);
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
-  box-shadow: var(--shadow-subtle);
+  color: var(--color-brand-logo);
 }
 
 .auth-brand > span:last-child {

@@ -1,5 +1,6 @@
-import { Landmark } from "lucide-react";
 import { Link } from "react-router-dom";
+
+import { FintrackLogo } from "../brand";
 
 export function Brand({ onNavigate }) {
   return (
@@ -10,7 +11,7 @@ export function Brand({ onNavigate }) {
       aria-label="Fintrack dashboard"
     >
       <span className="app-brand__mark" aria-hidden="true">
-        <Landmark size={20} strokeWidth={2} />
+        <FintrackLogo size={40} decorative />
       </span>
       <span className="app-brand__copy">
         <span className="app-brand__name">Fintrack</span>

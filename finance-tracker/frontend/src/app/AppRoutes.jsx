@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
+import { FintrackLogo } from "../components/brand";
 import { AppShell } from "../components/layout";
 import { StateMessage } from "../components/ui";
 import { useAuth } from "../context/useAuth";
@@ -32,7 +33,9 @@ const ROUTE_TITLES = {
 function FullPageState({ title, message }) {
   return (
     <div className="route-loading">
-      <div className="route-loading__brand" aria-hidden="true">F</div>
+      <div className="route-loading__brand">
+        <FintrackLogo size={52} decorative />
+      </div>
       <StateMessage state="loading" title={title} description={message} />
     </div>
   );
@@ -46,7 +49,7 @@ function PrivateRoute({ children }) {
     return (
       <FullPageState
         title="Restoring your session"
-        message="Checking your secure FinTrack workspace."
+        message="Checking your secure Fintrack workspace."
       />
     );
   }
