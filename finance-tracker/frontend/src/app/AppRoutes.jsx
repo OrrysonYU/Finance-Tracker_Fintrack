@@ -17,6 +17,7 @@ const LoginPage = lazy(() => import("../features/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../features/auth/RegisterPage"));
 const ReportsPage = lazy(() => import("../features/reports/ReportsPage"));
 const TransactionsPage = lazy(() => import("../features/transactions/TransactionsWorkspace"));
+const LandingPage = lazy(() => import("../features/landing/LandingPage"));
 
 const ROUTE_TITLES = {
   "/": "Dashboard",
@@ -41,26 +42,6 @@ function FullPageState({ title, message }) {
   );
 }
 
-function PrivateRoute({ children }) {
-  const { user, loading } = useAuth();
-  const location = useLocation();
-
-  if (loading) {
-    return (
-      <FullPageState
-        title="Restoring your session"
-        message="Checking your secure Fintrack workspace."
-      />
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
-  }
-
-  return children;
-}
-
 function PublicRoute({ children }) {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -81,12 +62,30 @@ function AuthRouteContent({ children }) {
   return <Suspense fallback={<AuthPageSkeleton />}>{children}</Suspense>;
 }
 
+function RootRoute() {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <FullPageState title="Preparing Fintrack" message="Loading your financial workspace." />;
+  }
+
+  if (!user && location.pathname !== "/") {
+    return <Navigate to="/login" replace state={{ from: location }} />;
+  }
+
+  return user ? <AppShell /> : <AuthRouteContent><LandingPage /></AuthRouteContent>;
+}
+
 export function AppRoutes() {
   const { pathname } = useLocation();
+  const { user } = useAuth();
 
   useEffect(() => {
-    document.title = `${ROUTE_TITLES[pathname] || "Fintrack"} | Fintrack`;
-  }, [pathname]);
+    document.title = pathname === "/" && !user
+      ? "Fintrack — Financial clarity, finally"
+      : `${ROUTE_TITLES[pathname] || "Fintrack"} | Fintrack`;
+  }, [pathname, user]);
 
   return (
     <ErrorBoundary resetKeys={[pathname]}>
@@ -111,14 +110,7 @@ export function AppRoutes() {
             </PublicRoute>
           }
         />
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <AppShell />
-            </PrivateRoute>
-          }
-        >
+        <Route path="/" element={<RootRoute />}>
           <Route index element={<DashboardPage />} />
           <Route path="accounts" element={<AccountsPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
