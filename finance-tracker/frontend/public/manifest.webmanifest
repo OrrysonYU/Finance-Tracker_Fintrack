@@ -1,7 +1,12 @@
 {
-  "name": "Fintrack — Personal finance",
+  "name": "Fintrack — Personal finance clarity",
   "short_name": "Fintrack",
+  "description": "A personal finance workspace for accounts, transactions, budgets, goals, reports, and explainable AI Insights.",
+  "id": "/",
   "start_url": "/",
+  "scope": "/",
+  "lang": "en",
+  "dir": "ltr",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ffffff",
