@@ -32,13 +32,17 @@
           // Storage can be unavailable in privacy-restricted contexts.
         }
 
-        const theme = preference === "light" || preference === "dark"
+        const normalizedPreference = preference === "light" || preference === "dark"
           ? preference
+          : "system";
+        const theme = normalizedPreference !== "system"
+          ? normalizedPreference
           : window.matchMedia("(prefers-color-scheme: dark)").matches
             ? "dark"
             : "light";
 
         document.documentElement.dataset.theme = theme;
+        document.documentElement.dataset.themePreference = normalizedPreference;
         document.documentElement.style.colorScheme = theme;
         document.querySelector('meta[name="theme-color"]')
           ?.setAttribute("content", theme === "dark" ? "#10141d" : "#ffffff");
