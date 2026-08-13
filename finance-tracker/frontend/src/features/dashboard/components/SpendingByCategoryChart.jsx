@@ -80,12 +80,14 @@ export function SpendingByCategoryChart({ categorySpend, currency }) {
                 <Tooltip
                   formatter={(value) => [formatMoney(value, currency), "Spent"]}
                   contentStyle={{
-                    background: "var(--color-surface)",
+                    background: "var(--chart-tooltip)",
                     border: "1px solid var(--color-border-default)",
                     borderRadius: "var(--radius-card)",
                     boxShadow: "var(--shadow-popover)",
                     color: "var(--color-text-primary)",
                   }}
+                  itemStyle={{ color: "var(--color-text-primary)" }}
+                  labelStyle={{ color: "var(--color-text-secondary)" }}
                 />
               </PieChart>
             </ResponsiveContainer>

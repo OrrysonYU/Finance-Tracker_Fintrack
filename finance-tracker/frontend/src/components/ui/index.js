@@ -16,3 +16,4 @@ export { SearchInput } from "./SearchInput";
 export { Skeleton, SkeletonGroup } from "./Skeleton";
 export { StateMessage } from "./StateMessage";
 export { TextField } from "./TextField";
+export { ThemeToggle } from "./ThemeToggle";

@@ -1,9 +1,9 @@
 /*
  * Fintrack design tokens
  *
- * Keep raw values here and consume semantic roles in components. This makes
- * the light theme explicit today and leaves a clean mapping point for the
- * future dark theme without scattering colors through feature code.
+ * Components consume semantic roles from this file. Light retains the
+ * approved Premium Minimal White values; dark remaps those same roles into a
+ * purpose-designed deep-charcoal system without component-level overrides.
  */
 :root {
   color-scheme: light;
@@ -15,6 +15,8 @@
   --color-surface-subtle: #f7f8fa;
   --color-surface-muted: #f1f3f6;
   --color-surface-raised: #ffffff;
+  --color-surface-overlay: rgb(255 255 255 / 0.96);
+  --color-surface-overlay-muted: rgb(255 255 255 / 0.72);
   --color-border-subtle: #edf0f3;
   --color-border-default: #e2e6ec;
   --color-border-strong: #c7ced8;
@@ -23,6 +25,7 @@
   --color-text-secondary: #526071;
   --color-text-muted: #626f81;
   --color-text-inverse: #ffffff;
+  --color-text-disabled: #8793a3;
 
   /* Canonical Fintrack treatments for light and dark surfaces. */
   --color-brand-logo: #172033;
@@ -32,16 +35,32 @@
   --color-accent: #2563eb;
   --color-accent-hover: #1d4ed8;
   --color-accent-soft: #eff6ff;
+  --color-accent-border: #bfdbfe;
   --color-accent-contrast: #ffffff;
   --color-success: #15803d;
   --color-success-soft: #f0fdf4;
+  --color-success-border: #bbf7d0;
   --color-warning: #b45309;
   --color-warning-soft: #fffbeb;
+  --color-warning-border: #fde68a;
   --color-danger: #b42318;
+  --color-danger-hover: #991b1b;
   --color-danger-soft: #fef2f2;
+  --color-danger-border: #fecaca;
   --color-info: #1d4ed8;
   --color-info-soft: #eff6ff;
+  --color-info-border: #bfdbfe;
   --color-focus-ring: #2563eb;
+  --color-focus-soft: rgb(37 99 235 / 0.12);
+
+  /* Navigation, inputs, dialogs, and overlays */
+  --color-navigation: var(--color-surface);
+  --color-navigation-hover: var(--color-surface-muted);
+  --color-navigation-active: var(--color-accent-soft);
+  --color-input-background: var(--color-surface);
+  --color-input-disabled: var(--color-surface-muted);
+  --color-dialog-background: var(--color-surface-raised);
+  --color-overlay: rgb(23 32 51 / 0.48);
 
   /* Legacy aliases keep the current Tailwind screens readable during migration. */
   --color-background: var(--color-canvas);
@@ -123,4 +142,77 @@
   --chart-negative: #b42318;
   --chart-grid: #e2e6ec;
   --chart-axis: #626f81;
+  --chart-tooltip: var(--color-surface-raised);
+  --chart-cursor: rgb(37 99 235 / 0.08);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Deep-charcoal surfaces, intentionally distinct rather than pure black. */
+  --color-white: #ffffff;
+  --color-canvas: #10141d;
+  --color-surface: #171c26;
+  --color-surface-subtle: #121720;
+  --color-surface-muted: #202733;
+  --color-surface-raised: #1b212c;
+  --color-surface-overlay: rgb(23 28 38 / 0.94);
+  --color-surface-overlay-muted: rgb(27 33 44 / 0.82);
+  --color-border-subtle: #252d3a;
+  --color-border-default: #303947;
+  --color-border-strong: #475363;
+  --color-border-control: #647184;
+  --color-text-primary: #f3f6fa;
+  --color-text-secondary: #c2cad6;
+  --color-text-muted: #98a5b6;
+  --color-text-inverse: #10141d;
+  --color-text-disabled: #727f91;
+
+  --color-brand-logo: #f3f6fa;
+  --color-brand-logo-inverse: #f8fafc;
+
+  --color-accent: #76a7ff;
+  --color-accent-hover: #9abfff;
+  --color-accent-soft: #1a2943;
+  --color-accent-border: #365986;
+  --color-accent-contrast: #0d1726;
+  --color-success: #65d28a;
+  --color-success-soft: #152b20;
+  --color-success-border: #2d6542;
+  --color-warning: #f0b95e;
+  --color-warning-soft: #302516;
+  --color-warning-border: #725329;
+  --color-danger: #ff8d85;
+  --color-danger-hover: #ffaaa4;
+  --color-danger-soft: #351d20;
+  --color-danger-border: #74383d;
+  --color-info: #8bb6ff;
+  --color-info-soft: #1a2943;
+  --color-info-border: #365986;
+  --color-focus-ring: #8bb6ff;
+  --color-focus-soft: rgb(139 182 255 / 0.2);
+
+  --color-navigation: #151a23;
+  --color-navigation-hover: #202733;
+  --color-navigation-active: #1a2943;
+  --color-input-background: #151a23;
+  --color-input-disabled: #202630;
+  --color-dialog-background: #1b212c;
+  --color-overlay: rgb(4 7 12 / 0.7);
+
+  --shadow-subtle: 0 1px 2px rgb(0 0 0 / 0.22);
+  --shadow-popover: 0 14px 32px rgb(0 0 0 / 0.34), 0 3px 8px rgb(0 0 0 / 0.22);
+  --shadow-dialog: 0 24px 56px rgb(0 0 0 / 0.46), 0 6px 16px rgb(0 0 0 / 0.3);
+
+  /* Muted, separated series chosen for charcoal surfaces. */
+  --chart-primary: #76a7ff;
+  --chart-secondary: #a9b5c6;
+  --chart-tertiary: #54c6b6;
+  --chart-quaternary: #e8b05a;
+  --chart-positive: #65d28a;
+  --chart-negative: #ff8d85;
+  --chart-grid: #303947;
+  --chart-axis: #aab5c5;
+  --chart-tooltip: #1b212c;
+  --chart-cursor: rgb(118 167 255 / 0.12);
 }

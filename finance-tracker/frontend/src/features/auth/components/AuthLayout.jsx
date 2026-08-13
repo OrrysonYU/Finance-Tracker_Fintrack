@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 import { FintrackLogo } from "../../../components/brand";
+import { ThemeToggle } from "../../../components/ui";
 
 export function AuthLayout({
   asideDescription,
@@ -65,6 +66,7 @@ export function AuthLayout({
       </aside>
 
       <section className="auth-shell__main" aria-label={title}>
+        <ThemeToggle className="auth-shell__theme-toggle" />
         <div className="auth-shell__mobile-brand">
           <Link className="auth-brand" to="/login" aria-label="Fintrack sign in">
             <span className="auth-brand__mark" aria-hidden="true">

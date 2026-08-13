@@ -107,7 +107,7 @@ export function CashFlowChart({
                   width={52}
                 />
                 <Tooltip
-                  cursor={{ fill: "var(--color-surface-subtle)" }}
+                  cursor={{ fill: "var(--chart-cursor)" }}
                   formatter={(value, name) => [
                     formatMoney(value, currency),
                     name === "expense"
@@ -115,12 +115,14 @@ export function CashFlowChart({
                       : name.charAt(0).toUpperCase() + name.slice(1),
                   ]}
                   contentStyle={{
-                    background: "var(--color-surface)",
+                    background: "var(--chart-tooltip)",
                     border: "1px solid var(--color-border-default)",
                     borderRadius: "var(--radius-card)",
                     boxShadow: "var(--shadow-popover)",
                     color: "var(--color-text-primary)",
                   }}
+                  itemStyle={{ color: "var(--color-text-primary)" }}
+                  labelStyle={{ color: "var(--color-text-secondary)" }}
                 />
                 <Bar
                   dataKey="income"
@@ -141,7 +143,7 @@ export function CashFlowChart({
                   dataKey="net"
                   stroke="var(--chart-positive)"
                   strokeWidth={2}
-                  dot={{ r: 3, fill: "var(--color-surface)", strokeWidth: 2 }}
+                  dot={{ r: 3, fill: "var(--color-surface)", stroke: "var(--chart-positive)", strokeWidth: 2 }}
                   activeDot={{ r: 4 }}
                   isAnimationActive={!reduceMotion}
                 />
