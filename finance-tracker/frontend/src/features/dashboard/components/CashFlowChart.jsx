@@ -39,6 +39,8 @@ export function CashFlowChart({
     income: Number(item.income || 0),
     expense: Number(item.expense || 0),
     net: Number(item.net || 0),
+    netPositive: Number(item.net || 0) >= 0 ? Number(item.net || 0) : null,
+    netNegative: Number(item.net || 0) < 0 ? Number(item.net || 0) : null,
   }));
   const hasValues = data.some(
     (item) => item.income !== 0 || item.expense !== 0 || item.net !== 0
@@ -76,7 +78,8 @@ export function CashFlowChart({
           <div className="dashboard-chart__legend" aria-hidden="true">
             <span><i className="dashboard-chart__key dashboard-chart__key--income" />Income</span>
             <span><i className="dashboard-chart__key dashboard-chart__key--expense" />Expenses</span>
-            <span><i className="dashboard-chart__key dashboard-chart__key--net" />Net</span>
+            <span><i className="dashboard-chart__key dashboard-chart__key--net" />Net positive</span>
+            <span><i className="dashboard-chart__key dashboard-chart__key--net-negative" />Net negative</span>
           </div>
           <div
             className="dashboard-chart__canvas"
@@ -86,6 +89,9 @@ export function CashFlowChart({
             <ResponsiveContainer width="100%" height="100%">
               <ComposedChart
                 data={data}
+                accessibilityLayer
+                title="Income, expenses, and net cash flow by month"
+                desc="Use the arrow keys to explore monthly chart values. The same values are listed in the accessible table after the chart."
                 margin={{ top: 12, right: 8, left: -12, bottom: 0 }}
               >
                 <CartesianGrid
@@ -112,7 +118,9 @@ export function CashFlowChart({
                     formatMoney(value, currency),
                     name === "expense"
                       ? "Expenses"
-                      : name.charAt(0).toUpperCase() + name.slice(1),
+                      : name.startsWith("net")
+                        ? "Net"
+                        : name.charAt(0).toUpperCase() + name.slice(1),
                   ]}
                   contentStyle={{
                     background: "var(--chart-tooltip)",
@@ -140,10 +148,20 @@ export function CashFlowChart({
                 />
                 <Line
                   type="monotone"
-                  dataKey="net"
+                  dataKey="netPositive"
                   stroke="var(--chart-positive)"
                   strokeWidth={2}
                   dot={{ r: 3, fill: "var(--color-surface)", stroke: "var(--chart-positive)", strokeWidth: 2 }}
+                  activeDot={{ r: 4 }}
+                  isAnimationActive={!reduceMotion}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="netNegative"
+                  stroke="var(--chart-negative)"
+                  strokeWidth={2}
+                  strokeDasharray="5 4"
+                  dot={{ r: 3, fill: "var(--color-surface)", stroke: "var(--chart-negative)", strokeWidth: 2 }}
                   activeDot={{ r: 4 }}
                   isAnimationActive={!reduceMotion}
                 />

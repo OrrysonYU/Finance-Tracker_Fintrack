@@ -14,20 +14,21 @@ export const Field = forwardRef(function Field(
     <div className={`ui-field ${className}`.trim()} {...props}>
       {label && (
         <label className="ui-field__label" htmlFor={fieldId}>
-          {label} {required && <span className="ui-field__required">*</span>}
+          {label} {required && <span className="ui-field__required" aria-hidden="true">*</span>}
         </label>
       )}
       {typeof children === "function"
-        ? children({ id: fieldId, ref, "aria-describedby": describedBy, "aria-invalid": Boolean(error) })
+        ? children({ id: fieldId, ref, "aria-describedby": describedBy, "aria-invalid": Boolean(error) || undefined, "aria-required": required || undefined })
         : isValidElement(children)
           ? cloneElement(children, {
               id: children.props.id || fieldId,
               ref: children.ref || ref,
               "aria-describedby": children.props["aria-describedby"] || describedBy,
               "aria-invalid": children.props["aria-invalid"] || Boolean(error) || undefined,
+              "aria-required": children.props["aria-required"] || required || undefined,
             })
           : children}
-      {hint && !error && (
+      {hint && (
         <span className="ui-field__hint" id={hintId}>
           {hint}
         </span>

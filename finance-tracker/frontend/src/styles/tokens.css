@@ -30,6 +30,10 @@
   /* Canonical Fintrack treatments for light and dark surfaces. */
   --color-brand-logo: #172033;
   --color-brand-logo-inverse: #f8fafc;
+  --color-inverse-surface: #172033;
+  --color-inverse-surface-text: #ffffff;
+  --color-inverse-surface-muted: #c2cad6;
+  --color-inverse-surface-border: #334155;
 
   /* Brand and semantic roles */
   --color-accent: #2563eb;
@@ -170,6 +174,10 @@
 
   --color-brand-logo: #f3f6fa;
   --color-brand-logo-inverse: #f8fafc;
+  --color-inverse-surface: #0d1118;
+  --color-inverse-surface-text: #f3f6fa;
+  --color-inverse-surface-muted: #aab5c5;
+  --color-inverse-surface-border: #303947;
 
   --color-accent: #76a7ff;
   --color-accent-hover: #9abfff;

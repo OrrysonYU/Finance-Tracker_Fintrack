@@ -142,12 +142,20 @@
 .landing-goal__milestones span:not(:last-child)::after { background: var(--color-accent-border); }
 .landing-report-bars span { background: linear-gradient(var(--color-accent-hover), var(--color-accent)); }
 .landing-trust__cards article { background: var(--color-surface); }
-.landing-cta { background: var(--color-text-primary); color: var(--color-text-inverse); }
-.landing-cta h2 { color: var(--color-text-inverse); }
+.landing-cta { background: var(--color-inverse-surface); color: var(--color-inverse-surface-text); }
+.landing-cta h2 { color: var(--color-inverse-surface-text); }
 .landing-cta p,
-.landing-cta__signin { color: color-mix(in srgb, var(--color-text-inverse) 72%, transparent); }
-.landing-button--white { background: var(--color-text-inverse); color: var(--color-text-primary); }
-.landing-footer { background: #111827; }
+.landing-cta__signin { color: var(--color-inverse-surface-muted); }
+.landing-cta__signin:hover { color: var(--color-inverse-surface-text); }
+.landing-button--white { background: var(--color-inverse-surface-text); color: var(--color-inverse-surface); }
+.landing-footer { background: var(--color-inverse-surface); color: var(--color-inverse-surface-text); }
+.landing-footer .landing-brand,
+.landing-footer .landing-brand svg,
+.landing-footer__links b { color: var(--color-inverse-surface-text); }
+.landing-footer__top p,
+.landing-footer__links a { color: var(--color-inverse-surface-muted); }
+.landing-footer__links a:hover { color: var(--color-inverse-surface-text); }
+.landing-footer__bottom { border-color: var(--color-inverse-surface-border); color: var(--color-inverse-surface-muted); }
 
 @media (max-width: 720px) {
   .landing-nav__links { margin: 0; background: var(--color-surface-raised); box-shadow: var(--shadow-popover); }

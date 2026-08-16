@@ -56,7 +56,11 @@ export function SpendingByCategoryChart({ categorySpend, currency }) {
             aria-label="Expense category distribution chart"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
+              <PieChart
+                accessibilityLayer
+                title="Expense category distribution"
+                desc="Use the arrow keys to explore category values. The same values are listed in the accessible table after the chart."
+              >
                 <Pie
                   data={data}
                   dataKey="amount"
@@ -122,6 +126,11 @@ export function SpendingByCategoryChart({ categorySpend, currency }) {
               );
             })}
           </figcaption>
+          <table className="sr-only">
+            <caption>Expense category distribution</caption>
+            <thead><tr><th scope="col">Category</th><th scope="col">Share</th><th scope="col">Amount</th></tr></thead>
+            <tbody>{data.map((item) => <tr key={item.name}><th scope="row">{item.name}</th><td>{(total > 0 ? (item.amount / total) * 100 : 0).toFixed(0)}%</td><td>{formatMoney(item.amount, currency)}</td></tr>)}</tbody>
+          </table>
         </motion.figure>
       ) : (
         <DashboardPanelState

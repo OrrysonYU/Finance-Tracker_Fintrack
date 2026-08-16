@@ -10,9 +10,6 @@
   --color-card-hover: var(--color-surface-muted);
   --color-muted: var(--color-text-muted);
   --color-border: var(--color-border-default);
-  --color-danger: #b42318;
-  --color-success: #15803d;
-  --color-warning: #b45309;
 }
 
 *,
@@ -162,7 +159,11 @@ textarea:disabled {
 
 .ui-button:disabled,
 .ui-button[aria-disabled="true"] {
-  opacity: 0.55;
+  border-color: var(--color-border-default);
+  background: var(--color-input-disabled);
+  color: var(--color-text-disabled);
+  box-shadow: none;
+  opacity: 1;
 }
 
 .ui-button--sm {
@@ -2186,6 +2187,12 @@ textarea:disabled {
   background: var(--chart-positive);
 }
 
+.dashboard-chart__key--net-negative {
+  border: 2px dashed var(--chart-negative);
+  border-radius: 50%;
+  background: transparent;
+}
+
 .dashboard-chart__canvas {
   width: 100%;
   height: 17.5rem;
@@ -3953,7 +3960,8 @@ textarea:disabled {
 }
 
 .ui-data-table {
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: visible;
   border: var(--border-width-default) solid var(--color-border-default);
   border-radius: var(--radius-card);
   background: var(--color-surface);
@@ -4027,6 +4035,12 @@ textarea:disabled {
 }
 
 .ui-data-table__sort:hover { color: var(--color-text-primary); }
+
+.ui-data-table__sort:focus-visible {
+  border-radius: var(--radius-control);
+  outline: 3px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
 
 .transaction-cell {
   display: flex;
