@@ -1,6 +1,7 @@
 import http from "../../lib/http";
 import {
   clearAuthTokens,
+  getRefreshToken,
   hasStoredTokens,
   setAuthTokens,
 } from "./auth-storage";
@@ -50,7 +51,15 @@ export const authApi = {
     return http.get("/api/auth/me/profile-image/", { responseType: "blob" });
   },
 
-  logout() {
+  async logout() {
+    const refresh = getRefreshToken();
+    if (refresh) {
+      try {
+        await http.post("/api/auth/logout/", { refresh }, { skipAuthRefresh: true });
+      } catch {
+        // Local cleanup is still mandatory when the server is unavailable.
+      }
+    }
     clearAuthTokens();
   },
 

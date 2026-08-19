@@ -9,6 +9,8 @@ def profile_image_upload_to(instance, filename):
 
 
 class User(AbstractUser):
+    # Tokens issued before this timestamp are rejected after a security event.
+    auth_epoch = models.DateTimeField(null=True, blank=True, editable=False)
     profile_image = models.ImageField(
         upload_to=profile_image_upload_to,
         blank=True,
@@ -65,3 +67,14 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_username()
+
+
+class RevokedToken(models.Model):
+    """Access-token JTIs revoked before their natural expiry."""
+
+    jti = models.CharField(max_length=255, unique=True)
+    expires_at = models.DateTimeField()
+    revoked_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=("jti", "expires_at"))]

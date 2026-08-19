@@ -13,3 +13,16 @@ DATABASES = {
 }
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+
+# Keep unrelated tests independent; the dedicated auth throttling regression
+# test exercises the production limits explicitly.
+REST_FRAMEWORK = {
+    **REST_FRAMEWORK,
+    "DEFAULT_THROTTLE_RATES": {
+        **REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"],
+        "auth_login": "10/minute",
+        "auth_register": "10000/minute",
+        "auth_refresh": "10000/minute",
+        "auth_password_reset": "10000/minute",
+    },
+}

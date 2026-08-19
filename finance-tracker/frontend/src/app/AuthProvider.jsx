@@ -42,7 +42,7 @@ export function AuthProvider({ children }) {
           setSessionError("");
         }
       } catch {
-        authApi.logout();
+        void authApi.logout();
         if (isMounted) {
           setUser(null);
           setSessionError("Your session expired. Please sign in again.");
@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handleSessionExpired = () => {
-      authApi.logout();
+      void authApi.logout();
       setUser(null);
       setSessionError("Your session expired. Please sign in again.");
       setLoading(false);
@@ -95,7 +95,7 @@ export function AuthProvider({ children }) {
       URL.revokeObjectURL(profileObjectUrl.current);
       profileObjectUrl.current = null;
     }
-    authApi.logout();
+    void authApi.logout();
     setUser(null);
     setSessionError("");
   };

@@ -58,6 +58,7 @@ http.interceptors.response.use(
     const shouldRefresh =
       error.response?.status === 401 &&
       originalRequest &&
+      !originalRequest.skipAuthRefresh &&
       !originalRequest._retry &&
       !originalRequest.url?.includes("/api/auth/token/");
 
