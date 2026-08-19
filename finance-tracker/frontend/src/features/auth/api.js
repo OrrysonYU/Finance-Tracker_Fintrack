@@ -32,6 +32,24 @@ export const authApi = {
     return data;
   },
 
+  async uploadProfileImage(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    const { data } = await http.post("/api/auth/me/profile-image/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return data;
+  },
+
+  async deleteProfileImage() {
+    const { data } = await http.delete("/api/auth/me/profile-image/");
+    return data;
+  },
+
+  async getProfileImage() {
+    return http.get("/api/auth/me/profile-image/", { responseType: "blob" });
+  },
+
   logout() {
     clearAuthTokens();
   },

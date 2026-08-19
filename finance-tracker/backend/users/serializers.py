@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.urls import reverse
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -12,10 +13,13 @@ def user_field_default(field_name):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    profile_image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = User
         fields = (
             "id",
+            "profile_image_url",
             "username",
             "email",
             "first_name",
@@ -31,10 +35,17 @@ class UserSerializer(serializers.ModelSerializer):
             "notification_goal_updates",
             "notification_account_activity",
         )
-        read_only_fields = ("id",)
+        read_only_fields = ("id", "profile_image_url")
         extra_kwargs = {
             "email": {"required": True, "allow_blank": False},
         }
+
+    def get_profile_image_url(self, obj):
+        if not obj.profile_image:
+            return None
+        request = self.context.get("request")
+        path = reverse("profile-image")
+        return request.build_absolute_uri(path) if request else path
 
     def validate_username(self, value):
         username = value.strip()

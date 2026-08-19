@@ -1,8 +1,12 @@
-import { Alert, Field, Input, Select, UserAvatar } from "../../../components/ui";
+import { useEffect, useState } from "react";
+import { Trash2, Upload } from "lucide-react";
+
+import { Alert, Button, Field, Input, Select, UserAvatar } from "../../../components/ui";
 import { CURRENCY_OPTIONS, TIMEZONE_OPTIONS } from "../account-center-options";
 import { useAccountSectionForm } from "../useAccountSectionForm";
 import { validateProfile } from "../validation";
 import { SettingFormActions } from "./SettingFormActions";
+import { PROFILE_IMAGE_ACCEPT, PROFILE_IMAGE_FORMAT_GUIDANCE, validateProfileImage } from "../profile-image";
 
 function profileValues(user) {
   return {
@@ -24,7 +28,13 @@ function ensureCurrent(options, value) {
     : [{ value, label: value }, ...options];
 }
 
-export function ProfileSettings({ user, onSave }) {
+export function ProfileSettings({ user, onSave, onUploadImage, onDeleteImage }) {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [imageError, setImageError] = useState("");
+  const [imageNotice, setImageNotice] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const form = useAccountSectionForm({
     initialValues: profileValues(user),
     onSave,
@@ -32,14 +42,81 @@ export function ProfileSettings({ user, onSave }) {
     validate: validateProfile,
   });
   const previewUser = { ...user, ...form.values };
+  const avatarUser = previewUrl ? { ...previewUser, profile_image_src: previewUrl } : previewUser;
+
+  useEffect(() => () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  function chooseImage(event) {
+    const file = event.target.files?.[0];
+    setImageNotice("");
+    const validationError = validateProfileImage(file);
+    if (validationError) {
+      setSelectedImage(null);
+      setImageError(validationError);
+      setPreviewUrl("");
+      return;
+    }
+    setImageError("");
+    setSelectedImage(file);
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  async function uploadImage() {
+    if (!selectedImage || !onUploadImage) return;
+    setIsUploading(true);
+    setImageError("");
+    setImageNotice("");
+    try {
+      await onUploadImage(selectedImage);
+      setSelectedImage(null);
+      setPreviewUrl("");
+      setImageNotice("Profile picture updated.");
+    } catch (error) {
+      const message = error?.response?.data?.image?.[0] || error?.response?.data?.detail;
+      setImageError(message || "The profile picture could not be uploaded. Please try again.");
+    } finally {
+      setIsUploading(false);
+    }
+  }
+
+  async function deleteImage() {
+    if (!user?.profile_image_url || !onDeleteImage) return;
+    setIsDeleting(true);
+    setImageError("");
+    setImageNotice("");
+    try {
+      await onDeleteImage();
+      setImageNotice("Profile picture removed.");
+    } catch {
+      setImageError("The profile picture could not be removed. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
 
   return (
     <form className="account-center__form" onSubmit={form.submit} noValidate>
       <div className="account-center__avatar-panel">
-        <UserAvatar user={previewUser} size="xl" />
+        <UserAvatar user={avatarUser} size="xl" />
         <div className="account-center__avatar-copy">
           <strong>Profile picture</strong>
-          <span>Your initials update automatically from the profile name shown in Fintrack.</span>
+          <span>{PROFILE_IMAGE_FORMAT_GUIDANCE}</span>
+          <Field label="Choose image" hint="The selected image is previewed locally before upload." error={imageError} className="account-center__avatar-field">
+            <Input type="file" accept={PROFILE_IMAGE_ACCEPT} onChange={chooseImage} disabled={isUploading || isDeleting} />
+          </Field>
+          <div className="account-center__avatar-actions">
+            <Button type="button" size="sm" onClick={uploadImage} disabled={!selectedImage || isDeleting} loading={isUploading}>
+              <Upload size={16} aria-hidden="true" /> Upload picture
+            </Button>
+            {user?.profile_image_url && !selectedImage && (
+              <Button type="button" size="sm" variant="danger" onClick={deleteImage} disabled={isUploading} loading={isDeleting}>
+                <Trash2 size={16} aria-hidden="true" /> Remove
+              </Button>
+            )}
+          </div>
+          {imageNotice && <span className="account-center__avatar-status" role="status">{imageNotice}</span>}
         </div>
       </div>
 

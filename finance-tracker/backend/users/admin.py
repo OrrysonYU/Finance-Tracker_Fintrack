@@ -12,6 +12,7 @@ class FintrackUserAdmin(UserAdmin):
             {
                 "fields": (
                     "display_name",
+                    "profile_image",
                     "phone_number",
                     "country",
                     "default_currency",
@@ -32,6 +33,7 @@ class FintrackUserAdmin(UserAdmin):
                 "classes": ("wide",),
                 "fields": (
                     "display_name",
+                    "profile_image",
                     "phone_number",
                     "country",
                     "default_currency",

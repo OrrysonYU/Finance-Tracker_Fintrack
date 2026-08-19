@@ -1,8 +1,21 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from uuid import uuid4
+
+
+def profile_image_upload_to(instance, filename):
+    """Return a private, server-generated storage key for a user's image."""
+    return f"profile-images/user-{instance.pk}/{uuid4().hex}.jpg"
 
 
 class User(AbstractUser):
+    profile_image = models.ImageField(
+        upload_to=profile_image_upload_to,
+        blank=True,
+        null=True,
+        max_length=255,
+        help_text="Normalized profile image stored in private media storage.",
+    )
     display_name = models.CharField(
         max_length=150,
         blank=True,

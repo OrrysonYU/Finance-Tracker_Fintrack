@@ -12,4 +12,9 @@ describe("UserAvatar", () => {
     expect(getUserInitials(user)).toBe("AO");
     expect(tree.findByType("span").props["aria-label"]).toBe("Profile picture for Amina Otieno");
   });
+
+  it("renders an authenticated image source when one is available", () => {
+    const tree = create(<UserAvatar user={{ username: "amina", profile_image_src: "blob:test" }} />).root;
+    expect(tree.findByType("img").props.src).toBe("blob:test");
+  });
 });

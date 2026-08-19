@@ -10,7 +10,9 @@ export function UserAvatar({ user, size = "md", className = "", decorative = fal
       aria-hidden={decorative || undefined}
       aria-label={decorative ? undefined : `Profile picture for ${label}`}
     >
-      {getUserInitials(user)}
+      {user?.profile_image_src ? (
+        <img className="ui-user-avatar__image" src={user.profile_image_src} alt="" aria-hidden="true" />
+      ) : getUserInitials(user)}
     </span>
   );
 }

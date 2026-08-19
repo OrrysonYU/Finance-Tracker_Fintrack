@@ -12,7 +12,7 @@ import { ProfileSettings } from "./components/ProfileSettings";
 import { SecuritySettings } from "./components/SecuritySettings";
 
 export default function AccountCenterPage() {
-  const { user, updateCurrentUser, logout } = useAuth();
+  const { user, updateCurrentUser, uploadProfileImage, deleteProfileImage, logout } = useAuth();
   const navigate = useNavigate();
 
   function handleSignOut() {
@@ -40,7 +40,7 @@ export default function AccountCenterPage() {
             description="Your personal details and regional finance defaults."
             icon={UserRound}
           >
-            <ProfileSettings user={user} onSave={updateCurrentUser} />
+            <ProfileSettings user={user} onSave={updateCurrentUser} onUploadImage={uploadProfileImage} onDeleteImage={deleteProfileImage} />
           </AccountSection>
 
           <AccountSection

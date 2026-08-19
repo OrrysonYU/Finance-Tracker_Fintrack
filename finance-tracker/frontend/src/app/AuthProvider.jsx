@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { AuthContext } from "../context/AuthContextCore";
 import { authApi } from "../features/auth/api";
@@ -8,6 +8,23 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sessionError, setSessionError] = useState("");
+  const profileObjectUrl = useRef(null);
+
+  const hydrateUser = useCallback(async (currentUser) => {
+    if (profileObjectUrl.current && typeof URL !== "undefined") {
+      URL.revokeObjectURL(profileObjectUrl.current);
+      profileObjectUrl.current = null;
+    }
+    if (!currentUser?.profile_image_url || typeof URL === "undefined") return currentUser;
+    try {
+      const response = await authApi.getProfileImage();
+      const objectUrl = URL.createObjectURL(response.data);
+      profileObjectUrl.current = objectUrl;
+      return { ...currentUser, profile_image_src: objectUrl };
+    } catch {
+      return currentUser;
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -21,7 +38,7 @@ export function AuthProvider({ children }) {
       try {
         const currentUser = await authApi.getCurrentUser();
         if (isMounted) {
-          setUser(currentUser);
+          setUser(await hydrateUser(currentUser));
           setSessionError("");
         }
       } catch {
@@ -40,7 +57,7 @@ export function AuthProvider({ children }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [hydrateUser]);
 
   useEffect(() => {
     const handleSessionExpired = () => {
@@ -62,18 +79,22 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     setSessionError("");
     const data = await authApi.login({ username, password });
-    setUser(data.user);
+    setUser(await hydrateUser(data.user));
     return data;
   };
 
   const register = async (username, email, password) => {
     setSessionError("");
     const data = await authApi.register({ username, email, password });
-    setUser(data.user);
+    setUser(await hydrateUser(data.user));
     return data;
   };
 
   const logout = () => {
+    if (profileObjectUrl.current && typeof URL !== "undefined") {
+      URL.revokeObjectURL(profileObjectUrl.current);
+      profileObjectUrl.current = null;
+    }
     authApi.logout();
     setUser(null);
     setSessionError("");
@@ -81,13 +102,25 @@ export function AuthProvider({ children }) {
 
   const updateCurrentUser = async (payload) => {
     const currentUser = await authApi.updateCurrentUser(payload);
-    setUser(currentUser);
+    setUser(await hydrateUser(currentUser));
+    return currentUser;
+  };
+
+  const uploadProfileImage = async (file) => {
+    const currentUser = await authApi.uploadProfileImage(file);
+    setUser(await hydrateUser(currentUser));
+    return currentUser;
+  };
+
+  const deleteProfileImage = async () => {
+    const currentUser = await authApi.deleteProfileImage();
+    setUser(await hydrateUser(currentUser));
     return currentUser;
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, sessionError, login, register, logout, updateCurrentUser }}
+      value={{ user, loading, sessionError, login, register, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
     >
       {children}
     </AuthContext.Provider>
