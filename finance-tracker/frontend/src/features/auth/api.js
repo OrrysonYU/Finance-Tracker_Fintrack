@@ -27,6 +27,11 @@ export const authApi = {
     return data;
   },
 
+  async updateCurrentUser(payload) {
+    const { data } = await http.patch("/api/auth/me/", payload);
+    return data;
+  },
+
   logout() {
     clearAuthTokens();
   },

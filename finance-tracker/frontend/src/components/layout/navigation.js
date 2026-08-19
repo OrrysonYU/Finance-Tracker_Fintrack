@@ -4,6 +4,7 @@ import {
   ChartNoAxesCombined,
   LayoutDashboard,
   PiggyBank,
+  Settings,
   Target,
   Wallet,
 } from "lucide-react";
@@ -54,7 +55,18 @@ export const APP_NAVIGATION = [
   },
 ];
 
+export const ACCOUNT_CENTER_NAVIGATION = {
+  to: "/account",
+  label: "Account Center",
+  description: "Profile, preferences, and privacy",
+  icon: Settings,
+};
+
 export function getCurrentNavigationItem(pathname) {
+  if (pathname === ACCOUNT_CENTER_NAVIGATION.to || pathname.startsWith(`${ACCOUNT_CENTER_NAVIGATION.to}/`)) {
+    return ACCOUNT_CENTER_NAVIGATION;
+  }
+
   return (
     APP_NAVIGATION.find(({ to, end }) =>
       end ? pathname === to : pathname === to || pathname.startsWith(`${to}/`)

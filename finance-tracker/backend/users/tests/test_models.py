@@ -27,6 +27,9 @@ class CustomUserModelTest(TestCase):
         self.assertEqual(user.locale, "en-KE")
         self.assertEqual(user.timezone, "Africa/Nairobi")
         self.assertTrue(user.ai_personalization_enabled)
+        self.assertTrue(user.notification_budget_updates)
+        self.assertTrue(user.notification_goal_updates)
+        self.assertTrue(user.notification_account_activity)
 
         user.default_currency = "USD"
         user.locale = "en-US"

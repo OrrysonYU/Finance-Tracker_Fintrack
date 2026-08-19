@@ -15,5 +15,8 @@ export { SectionHeader } from "./SectionHeader";
 export { SearchInput } from "./SearchInput";
 export { Skeleton, SkeletonGroup } from "./Skeleton";
 export { StateMessage } from "./StateMessage";
+export { Switch } from "./Switch";
 export { TextField } from "./TextField";
 export { ThemeToggle } from "./ThemeToggle";
+export { UserAvatar } from "./UserAvatar";
+export { getUserInitials } from "./user-avatar";

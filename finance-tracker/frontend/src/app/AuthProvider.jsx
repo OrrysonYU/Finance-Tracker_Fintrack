@@ -79,9 +79,15 @@ export function AuthProvider({ children }) {
     setSessionError("");
   };
 
+  const updateCurrentUser = async (payload) => {
+    const currentUser = await authApi.updateCurrentUser(payload);
+    setUser(currentUser);
+    return currentUser;
+  };
+
   return (
     <AuthContext.Provider
-      value={{ user, loading, sessionError, login, register, logout }}
+      value={{ user, loading, sessionError, login, register, logout, updateCurrentUser }}
     >
       {children}
     </AuthContext.Provider>

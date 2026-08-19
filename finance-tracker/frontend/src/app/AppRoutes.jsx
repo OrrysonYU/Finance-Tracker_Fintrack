@@ -9,6 +9,7 @@ import { AuthPageSkeleton } from "../features/auth/components/AuthPageSkeleton";
 import { ErrorBoundary } from "./ErrorBoundary";
 
 const AccountsPage = lazy(() => import("../features/accounts/AccountsWorkspace"));
+const AccountCenterPage = lazy(() => import("../features/account-center/AccountCenterPage"));
 const AiInsightsPage = lazy(() => import("../features/ai-insights/AiInsightsPage"));
 const BudgetsPage = lazy(() => import("../features/budgets/BudgetsPage"));
 const DashboardPage = lazy(() => import("../features/dashboard/DashboardPage"));
@@ -22,6 +23,7 @@ const LandingPage = lazy(() => import("../features/landing/LandingPage"));
 const ROUTE_TITLES = {
   "/": "Dashboard",
   "/accounts": "Accounts",
+  "/account": "Account Center",
   "/budgets": "Budgets",
   "/goals": "Goals",
   "/insights": "AI Insights",
@@ -113,6 +115,7 @@ export function AppRoutes() {
         <Route path="/" element={<RootRoute />}>
           <Route index element={<DashboardPage />} />
           <Route path="accounts" element={<AccountsPage />} />
+          <Route path="account" element={<AccountCenterPage />} />
           <Route path="transactions" element={<TransactionsPage />} />
           <Route path="budgets" element={<BudgetsPage />} />
           <Route path="goals" element={<GoalsPage />} />

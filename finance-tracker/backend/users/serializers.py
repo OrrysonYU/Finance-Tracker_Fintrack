@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 User = get_user_model()
 
@@ -19,12 +20,70 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "display_name",
+            "phone_number",
+            "country",
             "default_currency",
             "locale",
             "timezone",
             "ai_personalization_enabled",
+            "notification_budget_updates",
+            "notification_goal_updates",
+            "notification_account_activity",
         )
-        read_only_fields = ("id", "username", "email")
+        read_only_fields = ("id",)
+        extra_kwargs = {
+            "email": {"required": True, "allow_blank": False},
+        }
+
+    def validate_username(self, value):
+        username = value.strip()
+        queryset = User.objects.filter(username__iexact=username)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError("A user with this username already exists.")
+        return username
+
+    def validate_email(self, value):
+        email = value.strip().lower()
+        queryset = User.objects.filter(email__iexact=email)
+        if self.instance:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError("A user with this email already exists.")
+        return email
+
+    def validate_default_currency(self, value):
+        currency = value.strip().upper()
+        if len(currency) != 3 or not currency.isalpha():
+            raise serializers.ValidationError(
+                "Currency must be a three-letter ISO 4217 code."
+            )
+        return currency
+
+    def validate_timezone(self, value):
+        timezone = value.strip()
+        try:
+            ZoneInfo(timezone)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise serializers.ValidationError("Choose a valid IANA timezone.")
+        return timezone
+
+    def validate_phone_number(self, value):
+        phone_number = value.strip()
+        if phone_number and (
+            len(phone_number) < 7
+            or any(character not in "+0123456789 ()-." for character in phone_number)
+        ):
+            raise serializers.ValidationError("Enter a valid phone number.")
+        return phone_number
+
+    def validate(self, attrs):
+        for field_name in ("first_name", "last_name", "display_name", "country", "locale"):
+            if field_name in attrs:
+                attrs[field_name] = attrs[field_name].strip()
+        return attrs
 
 
 class RegisterSerializer(serializers.ModelSerializer):

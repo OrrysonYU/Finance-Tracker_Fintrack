@@ -131,3 +131,103 @@ class AuthApiTest(APITestCase):
         response = self.client.get(self.me_url)
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_authenticated_user_can_update_account_center_details(self):
+        user = get_user_model().objects.create_user(
+            username="account-owner",
+            email="owner@example.com",
+            password="StrongPass123!",
+        )
+        self.client.force_authenticate(user=user)
+
+        response = self.client.patch(
+            self.me_url,
+            {
+                "first_name": "Amina",
+                "last_name": "Otieno",
+                "display_name": "Amina O.",
+                "username": "amina-fintrack",
+                "email": "AMINA@example.com",
+                "phone_number": "+254 712 345 678",
+                "country": "Kenya",
+                "timezone": "Africa/Nairobi",
+                "default_currency": "kes",
+                "locale": "en-KE",
+                "notification_budget_updates": False,
+                "notification_goal_updates": True,
+                "notification_account_activity": False,
+                "ai_personalization_enabled": False,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        user.refresh_from_db()
+        self.assertEqual(user.display_name, "Amina O.")
+        self.assertEqual(user.username, "amina-fintrack")
+        self.assertEqual(user.email, "amina@example.com")
+        self.assertEqual(user.default_currency, "KES")
+        self.assertFalse(user.notification_budget_updates)
+        self.assertFalse(user.notification_account_activity)
+        self.assertFalse(user.ai_personalization_enabled)
+
+        reloaded = self.client.get(self.me_url)
+        self.assertEqual(reloaded.data["display_name"], "Amina O.")
+        self.assertEqual(reloaded.data["phone_number"], "+254 712 345 678")
+        self.assertEqual(reloaded.data["country"], "Kenya")
+
+    def test_me_update_is_always_scoped_to_authenticated_user(self):
+        owner = get_user_model().objects.create_user(
+            username="owner",
+            email="owner@example.com",
+            password="StrongPass123!",
+        )
+        other = get_user_model().objects.create_user(
+            username="other",
+            email="other@example.com",
+            password="StrongPass123!",
+        )
+        self.client.force_authenticate(user=owner)
+
+        response = self.client.patch(
+            self.me_url,
+            {"id": other.id, "display_name": "Owner profile"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        owner.refresh_from_db()
+        other.refresh_from_db()
+        self.assertEqual(owner.display_name, "Owner profile")
+        self.assertEqual(other.display_name, "")
+
+    def test_me_rejects_duplicate_identity_and_invalid_preferences(self):
+        user = get_user_model().objects.create_user(
+            username="owner",
+            email="owner@example.com",
+            password="StrongPass123!",
+        )
+        get_user_model().objects.create_user(
+            username="existing",
+            email="existing@example.com",
+            password="StrongPass123!",
+        )
+        self.client.force_authenticate(user=user)
+
+        identity_response = self.client.patch(
+            self.me_url,
+            {"username": "Existing", "email": "EXISTING@example.com"},
+            format="json",
+        )
+        preferences_response = self.client.patch(
+            self.me_url,
+            {"default_currency": "US", "timezone": "Not/A_Timezone"},
+            format="json",
+        )
+
+        self.assertEqual(identity_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("username", identity_response.data)
+        self.assertIn("email", identity_response.data)
+        self.assertEqual(preferences_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("default_currency", preferences_response.data)
+        self.assertIn("timezone", preferences_response.data)

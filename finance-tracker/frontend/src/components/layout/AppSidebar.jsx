@@ -10,7 +10,7 @@ export function AppSidebar({ user, onLogout, onNavigate }) {
       <SidebarNavigation onNavigate={onNavigate} />
       <div className="app-sidebar__footer">
         <ThemeToggle showLabel />
-        <UserAccountCard user={user} onLogout={onLogout} />
+        <UserAccountCard user={user} onLogout={onLogout} onNavigate={onNavigate} />
       </div>
     </aside>
   );

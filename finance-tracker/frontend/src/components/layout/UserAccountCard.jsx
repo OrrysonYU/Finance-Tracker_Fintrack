@@ -1,40 +1,39 @@
-import { LogOut } from "lucide-react";
+import { LogOut, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 
-function getInitials(user) {
-  const source = user?.username || user?.email || "User";
-  const parts = source.trim().split(/[\s._-]+/).filter(Boolean);
+import { UserAvatar } from "../ui";
 
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-}
-
-export function UserAccountCard({ user, onLogout, compact = false }) {
-  const username = user?.username || "Fintrack user";
+export function UserAccountCard({ user, onLogout, onNavigate, compact = false }) {
+  const fullName = [user?.first_name, user?.last_name].filter(Boolean).join(" ");
+  const username = user?.display_name || fullName || user?.username || "Fintrack user";
 
   if (compact) {
     return (
-      <div className="app-user app-user--compact">
-        <span className="app-user__avatar" aria-hidden="true">
-          {getInitials(user)}
-        </span>
+      <Link
+        className="app-user app-user--compact"
+        to="/account"
+        onClick={onNavigate}
+        aria-label={`Open account settings for ${username}`}
+      >
+        <UserAvatar user={user} size="sm" decorative />
         <span className="sr-only">Signed in as {username}</span>
-      </div>
+      </Link>
     );
   }
 
   return (
     <div className="app-user">
       <div className="app-user__identity">
-        <span className="app-user__avatar" aria-hidden="true">
-          {getInitials(user)}
-        </span>
+        <UserAvatar user={user} size="sm" decorative />
         <span className="app-user__copy">
           <strong className="app-user__name">{username}</strong>
           <span className="app-user__email">{user?.email || "Personal workspace"}</span>
         </span>
       </div>
+      <Link className="app-user__settings" to="/account" onClick={onNavigate}>
+        <Settings size={17} aria-hidden="true" />
+        <span>Account settings</span>
+      </Link>
       <button
         type="button"
         className="app-user__logout"
