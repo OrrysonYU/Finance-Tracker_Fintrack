@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError, transaction
 from django.test import SimpleTestCase, TestCase
 
 
@@ -46,3 +47,22 @@ class CustomUserModelTest(TestCase):
         self.assertEqual(user.default_currency, "USD")
         self.assertEqual(user.locale, "en-US")
         self.assertFalse(user.ai_personalization_enabled)
+
+    def test_username_canonical_key_is_database_unique(self):
+        User = get_user_model()
+        first = User.objects.create_user(username="Case.User", password="safe-test-password")
+        self.assertEqual(first.username, "case.user")
+        self.assertEqual(first.username_canonical, "case.user")
+
+        with self.assertRaises(IntegrityError), transaction.atomic():
+            User.objects.bulk_create([
+                User(username="legacy-case-user", username_canonical="case.user")
+            ])
+
+    def test_username_change_updates_canonical_key_with_update_fields(self):
+        user = get_user_model().objects.create_user(username="before-name", password="safe-test-password")
+        user.username = "After.Name"
+        user.save(update_fields=["username"])
+        user.refresh_from_db()
+        self.assertEqual(user.username, "after.name")
+        self.assertEqual(user.username_canonical, "after.name")

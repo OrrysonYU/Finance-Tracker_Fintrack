@@ -105,6 +105,53 @@ class AuthApiTest(APITestCase):
         self.assertIn("username", username_response.data)
         self.assertIn("email", email_response.data)
 
+    def test_username_policy_and_canonical_login(self):
+        invalid = [
+            ("root", "This username is reserved."),
+            ("ADMIN", "This username is reserved."),
+            ("admin-user", "This username is reserved."),
+            ("administrator", "This username is reserved."),
+            ("s.y.s.t.e.m", "This username is reserved."),
+            ("a", "Username is too short."),
+            ("a" * 31, "Username is too long."),
+            ("has space", "Username cannot contain spaces."),
+            ("name!", "Username contains unsupported characters."),
+            ("аdmin", "This username is reserved."),
+        ]
+        for username, message in invalid:
+            response = self.client.post(
+                self.register_url,
+                {"username": username, "email": f"{len(username)}@example.com", "password": "StrongPass123!"},
+                format="json",
+            )
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn(message, str(response.data["username"]))
+
+        response = self.client.post(
+            self.register_url,
+            {"username": "  Case_User  ", "email": "case@example.com", "password": "StrongPass123!"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data["user"]["username"], "case_user")
+        login = self.client.post(self.token_url, {"username": " CASE_USER ", "password": "StrongPass123!"}, format="json")
+        self.assertEqual(login.status_code, status.HTTP_200_OK)
+
+        duplicate = self.client.post(
+            self.register_url,
+            {"username": "CASE_USER", "email": "duplicate@example.com", "password": "StrongPass123!"},
+            format="json",
+        )
+        self.assertEqual(duplicate.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("Username is already taken.", str(duplicate.data["username"]))
+
+    def test_display_name_accepts_unicode_and_emoji_independently(self):
+        user = get_user_model().objects.create_user(username="display-user", email="display@example.com", password="StrongPass123!")
+        self.client.force_authenticate(user=user)
+        response = self.client.patch(self.me_url, {"display_name": "José Otuma ✨ 李明"}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["display_name"], "José Otuma ✨ 李明")
+
     def test_registration_rejects_password_mismatch(self):
         response = self.client.post(
             self.register_url,

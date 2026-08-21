@@ -26,6 +26,11 @@ describe("account center validation", () => {
     });
   });
 
+  it("rejects reserved and confusable administrative usernames", () => {
+    expect(validateProfile({ ...validProfile, username: "admin-user" }).username).toBe("This username is reserved.");
+    expect(validateProfile({ ...validProfile, username: "аdmin" }).username).toBe("This username is reserved.");
+  });
+
   it("maps API field errors without losing the form message", () => {
     const result = getAccountError({
       response: {

@@ -1,3 +1,5 @@
+import { getUsernameError } from "../../lib/username-policy";
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phonePattern = /^[+0-9 ()().-]+$/;
 
@@ -5,8 +7,8 @@ export function validateProfile(values) {
   const errors = {};
 
   if (!values.first_name.trim()) errors.first_name = "Enter your first name.";
-  if (!values.username.trim()) errors.username = "Enter your username.";
-  if (values.username.trim().length > 150) errors.username = "Use 150 characters or fewer.";
+  errors.username = getUsernameError(values.username);
+  if (!errors.username) delete errors.username;
   if (!values.email.trim()) {
     errors.email = "Enter your email address.";
   } else if (!emailPattern.test(values.email.trim())) {

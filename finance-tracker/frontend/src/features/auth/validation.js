@@ -1,3 +1,5 @@
+import { getUsernameError } from "../../lib/username-policy";
+
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function validateLogin(values) {
@@ -9,7 +11,7 @@ export function validateLogin(values) {
 
 export function validateRegistration(values) {
   return {
-    username: values.username.trim() ? "" : "Choose a username.",
+    username: getUsernameError(values.username, "Choose a username."),
     email: !values.email.trim()
       ? "Enter your email address."
       : emailPattern.test(values.email.trim())

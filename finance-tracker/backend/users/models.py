@@ -1,6 +1,9 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from uuid import uuid4
+
+from .username import UsernamePolicyError, canonicalize_username, normalize_username
 
 
 def profile_image_upload_to(instance, filename):
@@ -9,6 +12,12 @@ def profile_image_upload_to(instance, filename):
 
 
 class User(AbstractUser):
+    username_canonical = models.CharField(
+        max_length=150,
+        unique=True,
+        editable=False,
+        help_text="NFKC/case-folded identity key used for lookup and uniqueness.",
+    )
     # Tokens issued before this timestamp are rejected after a security event.
     auth_epoch = models.DateTimeField(null=True, blank=True, editable=False)
     profile_image = models.ImageField(
@@ -67,6 +76,22 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.get_username()
+
+    def save(self, *args, **kwargs):
+        username_changed = self._state.adding
+        if not username_changed and self.pk:
+            previous = type(self).objects.filter(pk=self.pk).values_list("username", flat=True).first()
+            username_changed = previous != self.username
+        if username_changed:
+            try:
+                self.username = normalize_username(self.username)
+            except UsernamePolicyError as exc:
+                raise ValidationError({"username": str(exc)}) from exc
+        self.username_canonical = canonicalize_username(self.username)
+        update_fields = kwargs.get("update_fields")
+        if update_fields is not None and username_changed:
+            kwargs["update_fields"] = set(update_fields) | {"username_canonical"}
+        return super().save(*args, **kwargs)
 
 
 class RevokedToken(models.Model):

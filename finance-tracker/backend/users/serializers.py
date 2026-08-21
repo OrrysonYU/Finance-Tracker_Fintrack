@@ -1,9 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from django.db import IntegrityError, transaction
 from django.urls import reverse
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+from .username import UsernamePolicyError, canonicalize_username, normalize_username
 
 User = get_user_model()
 
@@ -38,6 +41,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "profile_image_url")
         extra_kwargs = {
             "email": {"required": True, "allow_blank": False},
+            "username": {"validators": []},
         }
 
     def get_profile_image_url(self, obj):
@@ -48,12 +52,15 @@ class UserSerializer(serializers.ModelSerializer):
         return request.build_absolute_uri(path) if request else path
 
     def validate_username(self, value):
-        username = value.strip()
-        queryset = User.objects.filter(username__iexact=username)
+        try:
+            username = normalize_username(value)
+        except UsernamePolicyError as exc:
+            raise serializers.ValidationError(str(exc)) from exc
+        queryset = User.objects.filter(username_canonical=username)
         if self.instance:
             queryset = queryset.exclude(pk=self.instance.pk)
         if queryset.exists():
-            raise serializers.ValidationError("A user with this username already exists.")
+            raise serializers.ValidationError("Username is already taken.")
         return username
 
     def validate_email(self, value):
@@ -96,6 +103,13 @@ class UserSerializer(serializers.ModelSerializer):
                 attrs[field_name] = attrs[field_name].strip()
         return attrs
 
+    def update(self, instance, validated_data):
+        try:
+            with transaction.atomic():
+                return super().update(instance, validated_data)
+        except IntegrityError as exc:
+            raise serializers.ValidationError({"username": "Username is already taken."}) from exc
+
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=6)
@@ -117,6 +131,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         extra_kwargs = {
             "email": {"required": True, "allow_blank": False},
+            "username": {"validators": []},
             "first_name": {"required": False},
             "last_name": {"required": False},
             "default_currency": {"required": False},
@@ -126,9 +141,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate_username(self, value):
-        if User.objects.filter(username__iexact=value).exists():
-            raise serializers.ValidationError("A user with this username already exists.")
-        return value
+        try:
+            username = normalize_username(value)
+        except UsernamePolicyError as exc:
+            raise serializers.ValidationError(str(exc)) from exc
+        if User.objects.filter(username_canonical=username).exists():
+            raise serializers.ValidationError("Username is already taken.")
+        return username
 
     def validate_email(self, value):
         normalized_email = value.strip().lower()
@@ -148,24 +167,32 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        return User.objects.create_user(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            password=validated_data["password"],
-            first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
-            default_currency=validated_data.get("default_currency", user_field_default("default_currency")),
-            locale=validated_data.get("locale", user_field_default("locale")),
-            timezone=validated_data.get("timezone", user_field_default("timezone")),
-            ai_personalization_enabled=validated_data.get(
-                "ai_personalization_enabled",
-                user_field_default("ai_personalization_enabled"),
-            ),
-        )
+        try:
+            with transaction.atomic():
+                return User.objects.create_user(
+                    username=validated_data["username"],
+                    email=validated_data["email"],
+                    password=validated_data["password"],
+                    first_name=validated_data.get("first_name", ""),
+                    last_name=validated_data.get("last_name", ""),
+                    default_currency=validated_data.get("default_currency", user_field_default("default_currency")),
+                    locale=validated_data.get("locale", user_field_default("locale")),
+                    timezone=validated_data.get("timezone", user_field_default("timezone")),
+                    ai_personalization_enabled=validated_data.get(
+                        "ai_personalization_enabled",
+                        user_field_default("ai_personalization_enabled"),
+                    ),
+                )
+        except IntegrityError as exc:
+            raise serializers.ValidationError({"username": "Username is already taken."}) from exc
 
 
 class LoginSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
+        try:
+            attrs["username"] = canonicalize_username(attrs.get("username", ""))
+        except UsernamePolicyError as exc:
+            raise serializers.ValidationError({"username": "Enter your username."}) from exc
         data = super().validate(attrs)
         data["user"] = UserSerializer(self.user).data
         return data
