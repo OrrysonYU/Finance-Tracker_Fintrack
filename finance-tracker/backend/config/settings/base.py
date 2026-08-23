@@ -139,6 +139,7 @@ REST_FRAMEWORK = {
         "auth_register": env("AUTH_REGISTER_RATE", "5/hour"),
         "auth_refresh": env("AUTH_REFRESH_RATE", "30/minute"),
         "auth_password_reset": env("AUTH_PASSWORD_RESET_RATE", "5/hour"),
+        "auth_mfa": env("AUTH_MFA_RATE", "10/minute"),
     },
 }
 
@@ -172,3 +173,8 @@ SIMPLE_JWT = {
 }
 
 PASSWORD_RESET_TIMEOUT = env_int("PASSWORD_RESET_TIMEOUT_SECONDS", 3600)
+MFA_ISSUER = env("MFA_ISSUER", "Fintrack")
+MFA_ENCRYPTION_KEY = env("MFA_ENCRYPTION_KEY", "")
+MFA_CHALLENGE_TIMEOUT_SECONDS = env_int("MFA_CHALLENGE_TIMEOUT_SECONDS", 300)
+MFA_MAX_CHALLENGE_ATTEMPTS = env_int("MFA_MAX_CHALLENGE_ATTEMPTS", 5)
+MFA_TOTP_ALLOWED_DRIFT = env_int("MFA_TOTP_ALLOWED_DRIFT", 1)

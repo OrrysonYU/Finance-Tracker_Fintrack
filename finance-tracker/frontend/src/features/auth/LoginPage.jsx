@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ArrowRight, UserRound } from "lucide-react";
+import { ArrowLeft, ArrowRight, KeyRound, UserRound } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import { Alert, Button, PasswordField, TextField } from "../../components/ui";
@@ -30,12 +30,15 @@ const storyPoints = [
 const initialForm = { username: "", password: "" };
 
 export default function LoginPage() {
-  const { login, sessionError } = useAuth();
+  const { login, verifyMfa, sessionError } = useAuth();
   const fieldRefs = useRef({});
   const [form, setForm] = useState(initialForm);
   const [touched, setTouched] = useState({});
   const [formError, setFormError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [mfaChallenge, setMfaChallenge] = useState("");
+  const [mfaCode, setMfaCode] = useState("");
+  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const validation = validateLogin(form);
   const visibleError = formError || sessionError;
 
@@ -65,7 +68,11 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
-      await login(form.username.trim(), form.password);
+      const result = await login(form.username.trim(), form.password);
+      if (result.mfa_required) {
+        setMfaChallenge(result.mfa_challenge);
+        setForm((current) => ({ ...current, password: "" }));
+      }
     } catch (error) {
       setFormError(getLoginError(error));
     } finally {
@@ -73,11 +80,37 @@ export default function LoginPage() {
     }
   };
 
+  const handleMfaSubmit = async (event) => {
+    event.preventDefault();
+    setFormError("");
+    if (!mfaCode.trim()) {
+      setFormError(useRecoveryCode ? "Enter a recovery code." : "Enter the 6-digit code from your authenticator app.");
+      return;
+    }
+    setLoading(true);
+    try {
+      await verifyMfa(mfaChallenge, mfaCode.trim());
+      setMfaChallenge("");
+      setMfaCode("");
+    } catch (error) {
+      setFormError(getLoginError(error));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetMfaChallenge = () => {
+    setMfaChallenge("");
+    setMfaCode("");
+    setUseRecoveryCode(false);
+    setFormError("");
+  };
+
   return (
     <AuthLayout
       eyebrow="Welcome back"
-      title="Sign in to Fintrack"
-      description="Enter your account details to continue to your financial workspace."
+      title={mfaChallenge ? "Verify it’s you" : "Sign in to Fintrack"}
+      description={mfaChallenge ? "Complete multi-factor authentication to continue." : "Enter your account details to continue to your financial workspace."}
       asideTitle="Your financial life, organized with clarity."
       asideDescription="Fintrack brings the information behind your everyday money decisions into one calm, dependable workspace."
       points={storyPoints}
@@ -95,6 +128,37 @@ export default function LoginPage() {
         )}
       </AnimatePresence>
 
+      {mfaChallenge ? (
+        <form className="auth-form" onSubmit={handleMfaSubmit} noValidate>
+          <TextField
+            id="login-mfa-code"
+            name="mfa-code"
+            label={useRecoveryCode ? "Recovery code" : "Authenticator code"}
+            leadingIcon={KeyRound}
+            value={mfaCode}
+            onChange={(event) => { setMfaCode(event.target.value); setFormError(""); }}
+            autoComplete="one-time-code"
+            inputMode={useRecoveryCode ? "text" : "numeric"}
+            pattern={useRecoveryCode ? undefined : "[0-9]*"}
+            placeholder={useRecoveryCode ? "XXXX-XXXX-XXXX" : "000000"}
+            required
+            autoFocus
+            disabled={loading}
+          />
+          <Button className="auth-submit" type="submit" size="lg" loading={loading}>
+            {loading ? "Verifying…" : "Verify and sign in"}
+            {!loading && <ArrowRight size={18} aria-hidden="true" />}
+          </Button>
+          <div className="auth-mfa-actions">
+            <Button variant="ghost" size="sm" onClick={() => { setUseRecoveryCode((current) => !current); setMfaCode(""); setFormError(""); }}>
+              {useRecoveryCode ? "Use authenticator code" : "Use a recovery code"}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={resetMfaChallenge}>
+              <ArrowLeft size={16} aria-hidden="true" />Back to password
+            </Button>
+          </div>
+        </form>
+      ) : (
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <TextField
           ref={(element) => {
@@ -142,6 +206,7 @@ export default function LoginPage() {
           {!loading && <ArrowRight size={18} aria-hidden="true" />}
         </Button>
       </form>
+      )}
     </AuthLayout>
   );
 }

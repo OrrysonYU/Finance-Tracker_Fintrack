@@ -13,6 +13,16 @@ function persistTokens(data) {
 export const authApi = {
   async login(credentials) {
     const { data } = await http.post("/api/auth/token/", credentials);
+    if (data.access && data.refresh) persistTokens(data);
+    return data;
+  },
+
+  async verifyMfa(challenge, code) {
+    const { data } = await http.post(
+      "/api/auth/mfa/challenge/",
+      { challenge, code },
+      { skipAuthRefresh: true }
+    );
     persistTokens(data);
     return data;
   },
@@ -49,6 +59,33 @@ export const authApi = {
 
   async getProfileImage() {
     return http.get("/api/auth/me/profile-image/", { responseType: "blob" });
+  },
+
+  async getMfaStatus() {
+    const { data } = await http.get("/api/auth/mfa/status/");
+    return data;
+  },
+
+  async beginMfaEnrollment(password) {
+    const { data } = await http.post("/api/auth/mfa/enroll/", { password });
+    return data;
+  },
+
+  async confirmMfaEnrollment(code) {
+    const { data } = await http.post("/api/auth/mfa/enroll/confirm/", { code });
+    persistTokens(data);
+    return data;
+  },
+
+  async regenerateRecoveryCodes(password, code) {
+    const { data } = await http.post("/api/auth/mfa/recovery-codes/", { password, code });
+    return data;
+  },
+
+  async disableMfa(password, code) {
+    const { data } = await http.post("/api/auth/mfa/disable/", { password, code });
+    persistTokens(data);
+    return data;
   },
 
   async logout() {

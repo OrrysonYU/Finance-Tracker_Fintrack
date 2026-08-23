@@ -24,5 +24,6 @@ REST_FRAMEWORK = {
         "auth_register": "10000/minute",
         "auth_refresh": "10000/minute",
         "auth_password_reset": "10000/minute",
+        "auth_mfa": "10000/minute",
     },
 }

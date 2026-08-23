@@ -1,10 +1,9 @@
-from datetime import datetime, timezone
-
 from django.utils import timezone as django_timezone
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import RevokedToken
+from .tokens import auth_epoch_claim
 
 
 class RevocableJWTAuthentication(JWTAuthentication):
@@ -21,8 +20,7 @@ class RevocableJWTAuthentication(JWTAuthentication):
         ).exists():
             raise AuthenticationFailed("Authentication credentials were invalid.", code="token_revoked")
 
-        if user.auth_epoch and token.get("iat"):
-            issued_at = datetime.fromtimestamp(int(token["iat"]), tz=timezone.utc)
-            if issued_at <= user.auth_epoch:
+        if user.auth_epoch:
+            if token.get("auth_epoch") != auth_epoch_claim(user):
                 raise AuthenticationFailed("Authentication credentials were invalid.", code="token_invalidated")
         return user, token

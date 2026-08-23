@@ -5195,6 +5195,107 @@ textarea:disabled {
   font-weight: 650;
 }
 
+.account-center__security-status--neutral {
+  background: var(--color-surface-muted);
+  color: var(--color-text-secondary) !important;
+}
+
+.account-center__mfa-panel {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border: var(--border-width-default) solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-surface-subtle);
+}
+
+.account-center__mfa-heading {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.account-center__mfa-heading > div,
+.account-center__mfa-form,
+.account-center__mfa-enrollment,
+.account-center__mfa-management {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.account-center__mfa-heading strong,
+.account-center__mfa-heading span {
+  display: block;
+}
+
+.account-center__mfa-heading span,
+.account-center__mfa-enrollment p,
+.account-center__mfa-management p,
+.account-center__recovery-codes p {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.account-center__mfa-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.account-center__mfa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.account-center__mfa-actions .ui-button,
+.account-center__recovery-codes .ui-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.account-center__secret,
+.account-center__recovery-codes {
+  padding: var(--space-4);
+  border: var(--border-width-default) solid var(--color-border-default);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+}
+
+.account-center__secret {
+  overflow-wrap: anywhere;
+  font-size: var(--font-size-small);
+  letter-spacing: 0.08em;
+}
+
+.account-center__provisioning-link {
+  width: fit-content;
+  font-weight: 650;
+}
+
+.account-center__recovery-codes ul {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-3) 0;
+  padding: 0;
+  list-style: none;
+}
+
+.account-center__recovery-codes code {
+  font-weight: 650;
+  letter-spacing: 0.04em;
+}
+
+.auth-mfa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
 .account-center__session-action {
   display: flex;
   align-items: center;
@@ -5305,6 +5406,26 @@ textarea:disabled {
   .account-center__security-status {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .account-center__mfa-heading {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .account-center__mfa-heading > .account-center__security-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .account-center__mfa-fields,
+  .account-center__recovery-codes ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .account-center__mfa-actions .ui-button,
+  .account-center__mfa-form .ui-button,
+  .account-center__mfa-enrollment .ui-button {
+    width: 100%;
   }
 }
 

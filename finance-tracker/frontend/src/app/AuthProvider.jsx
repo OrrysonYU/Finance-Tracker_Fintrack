@@ -79,6 +79,13 @@ export function AuthProvider({ children }) {
   const login = async (username, password) => {
     setSessionError("");
     const data = await authApi.login({ username, password });
+    if (data.user) setUser(await hydrateUser(data.user));
+    return data;
+  };
+
+  const verifyMfa = async (challenge, code) => {
+    setSessionError("");
+    const data = await authApi.verifyMfa(challenge, code);
     setUser(await hydrateUser(data.user));
     return data;
   };
@@ -120,7 +127,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, sessionError, login, register, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
+      value={{ user, loading, sessionError, login, verifyMfa, register, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
     >
       {children}
     </AuthContext.Provider>

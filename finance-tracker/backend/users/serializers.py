@@ -1,12 +1,20 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth import authenticate, get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.db import IntegrityError, transaction
 from django.urls import reverse
 from rest_framework import serializers
-from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, TokenRefreshSerializer
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.exceptions import AuthenticationFailed
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from .username import UsernamePolicyError, canonicalize_username, normalize_username
+from .mfa import generate_challenge_token
+from .models import MFAChallenge
+from .tokens import auth_epoch_claim, issue_token_pair
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -193,9 +201,47 @@ class LoginSerializer(TokenObtainPairSerializer):
             attrs["username"] = canonicalize_username(attrs.get("username", ""))
         except UsernamePolicyError as exc:
             raise serializers.ValidationError({"username": "Enter your username."}) from exc
-        data = super().validate(attrs)
-        data["user"] = UserSerializer(self.user).data
+        username = attrs.get("username", "")
+        password = attrs.get("password", "")
+        user = authenticate(self.context.get("request"), username=username, password=password)
+        if user is None:
+            raise AuthenticationFailed("No active account found with the given credentials")
+        self.user = user
+        if user.mfa_enabled:
+            token, token_hash = generate_challenge_token()
+            MFAChallenge.objects.create(
+                user=user,
+                token_hash=token_hash,
+                expires_at=timezone.now() + timedelta(seconds=settings.MFA_CHALLENGE_TIMEOUT_SECONDS),
+            )
+            return {"mfa_required": True, "mfa_challenge": token}
+        data = issue_token_pair(user)
+        data["user"] = UserSerializer(user).data
         return data
+
+
+class SecureTokenRefreshSerializer(TokenRefreshSerializer):
+    def validate(self, attrs):
+        refresh = self.token_class(attrs["refresh"])
+        user_id = refresh.get("user_id")
+        user = User.objects.filter(pk=user_id, is_active=True).first()
+        if not user or (user.auth_epoch and refresh.get("auth_epoch") != auth_epoch_claim(user)):
+            raise AuthenticationFailed("Authentication credentials were invalid.", code="token_invalidated")
+        return super().validate(attrs)
+
+
+class MFAChallengeSerializer(serializers.Serializer):
+    challenge = serializers.CharField(max_length=128)
+    code = serializers.CharField(max_length=64, trim_whitespace=True)
+
+
+class MFAEnrollmentConfirmSerializer(serializers.Serializer):
+    code = serializers.CharField(max_length=16, trim_whitespace=True)
+
+
+class MFAReauthSerializer(serializers.Serializer):
+    password = serializers.CharField(write_only=True, trim_whitespace=False)
+    code = serializers.CharField(max_length=64, required=False, allow_blank=False)
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):

@@ -20,6 +20,7 @@ class User(AbstractUser):
     )
     # Tokens issued before this timestamp are rejected after a security event.
     auth_epoch = models.DateTimeField(null=True, blank=True, editable=False)
+    mfa_enabled = models.BooleanField(default=False, editable=False)
     profile_image = models.ImageField(
         upload_to=profile_image_upload_to,
         blank=True,
@@ -103,3 +104,48 @@ class RevokedToken(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=("jti", "expires_at"))]
+
+
+class MFAConfiguration(models.Model):
+    """Encrypted TOTP configuration owned by exactly one user."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mfa_configuration")
+    secret_encrypted = models.BinaryField(editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    last_used_step = models.BigIntegerField(null=True, blank=True, editable=False)
+
+
+class MFARecoveryCode(models.Model):
+    """One-way representations of single-use MFA recovery codes."""
+
+    configuration = models.ForeignKey(MFAConfiguration, on_delete=models.CASCADE, related_name="recovery_codes")
+    code_hash = models.CharField(max_length=128, editable=False)
+    used_at = models.DateTimeField(null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=("configuration", "code_hash"), name="unique_mfa_recovery_code")]
+        indexes = [models.Index(fields=("configuration", "used_at"))]
+
+
+class MFAEnrollment(models.Model):
+    """Short-lived pending enrollment; never represents active MFA by itself."""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="mfa_enrollment")
+    secret_encrypted = models.BinaryField(editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class MFAChallenge(models.Model):
+    """Opaque, single-use password-authentication challenge."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="mfa_challenges")
+    token_hash = models.CharField(max_length=64, unique=True, editable=False)
+    expires_at = models.DateTimeField()
+    attempts = models.PositiveSmallIntegerField(default=0)
+    used_at = models.DateTimeField(null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=("user", "expires_at"))]
