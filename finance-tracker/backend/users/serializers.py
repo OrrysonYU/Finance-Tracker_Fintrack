@@ -11,6 +11,8 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 from .username import UsernamePolicyError, canonicalize_username, normalize_username
 from .mfa import generate_challenge_token
 from .models import MFAChallenge
+from .models import UserSession
+from .session_services import record_activity
 from .tokens import auth_epoch_claim, issue_token_pair
 from django.conf import settings
 from django.utils import timezone
@@ -205,6 +207,9 @@ class LoginSerializer(TokenObtainPairSerializer):
         password = attrs.get("password", "")
         user = authenticate(self.context.get("request"), username=username, password=password)
         if user is None:
+            failed_user = User.objects.filter(username_canonical=username, is_active=True).first()
+            if failed_user:
+                record_activity(failed_user, "login_failure", request=self.context.get("request"), success=False)
             raise AuthenticationFailed("No active account found with the given credentials")
         self.user = user
         if user.mfa_enabled:
@@ -215,7 +220,7 @@ class LoginSerializer(TokenObtainPairSerializer):
                 expires_at=timezone.now() + timedelta(seconds=settings.MFA_CHALLENGE_TIMEOUT_SECONDS),
             )
             return {"mfa_required": True, "mfa_challenge": token}
-        data = issue_token_pair(user)
+        data = issue_token_pair(user, request=self.context.get("request"), authentication_method="password")
         data["user"] = UserSerializer(user).data
         return data
 
@@ -227,6 +232,10 @@ class SecureTokenRefreshSerializer(TokenRefreshSerializer):
         user = User.objects.filter(pk=user_id, is_active=True).first()
         if not user or (user.auth_epoch and refresh.get("auth_epoch") != auth_epoch_claim(user)):
             raise AuthenticationFailed("Authentication credentials were invalid.", code="token_invalidated")
+        session_id = refresh.get("sid")
+        if not session_id or not UserSession.objects.filter(pk=session_id, user=user, revoked_at__isnull=True).exists():
+            raise AuthenticationFailed("Authentication credentials were invalid.", code="session_revoked")
+        UserSession.objects.filter(pk=session_id).update(last_activity_at=timezone.now())
         return super().validate(attrs)
 
 

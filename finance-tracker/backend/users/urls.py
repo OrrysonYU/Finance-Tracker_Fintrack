@@ -15,6 +15,10 @@ from .views import (
     MFAEnrollConfirmView,
     MFARecoveryCodesView,
     MFADisableView,
+    SessionsView,
+    SessionRevokeView,
+    RevokeOtherSessionsView,
+    AuthenticationActivityView,
 )
 
 urlpatterns = [
@@ -32,4 +36,8 @@ urlpatterns = [
     path("password-reset/confirm/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
     path("me/", MeView.as_view(), name="me"),
     path("me/profile-image/", ProfileImageView.as_view(), name="profile-image"),
+    path("sessions/", SessionsView.as_view(), name="sessions"),
+    path("sessions/revoke-others/", RevokeOtherSessionsView.as_view(), name="sessions-revoke-others"),
+    path("sessions/<uuid:session_id>/", SessionRevokeView.as_view(), name="session-revoke"),
+    path("activity/", AuthenticationActivityView.as_view(), name="authentication-activity"),
 ]

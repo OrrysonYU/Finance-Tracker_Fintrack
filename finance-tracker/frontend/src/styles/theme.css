@@ -5305,6 +5305,95 @@ textarea:disabled {
   border-top: var(--border-width-default) solid var(--color-border-subtle);
 }
 
+.account-center__session-panel {
+  display: grid;
+  gap: var(--space-4);
+  padding-top: var(--space-5);
+  border-top: var(--border-width-default) solid var(--color-border-subtle);
+}
+
+.account-center__security-section-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.account-center__security-section-heading h3 {
+  margin: 0;
+  font-size: var(--font-size-body);
+}
+
+.account-center__security-section-heading p,
+.account-center__security-muted,
+.account-center__session-card span,
+.account-center__session-card small,
+.account-center__activity-row span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.account-center__security-section-heading p {
+  margin: var(--space-1) 0 0;
+}
+
+.account-center__session-list,
+.account-center__activity-list {
+  display: grid;
+  border: var(--border-width-default) solid var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  overflow: hidden;
+}
+
+.account-center__session-card,
+.account-center__activity-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-surface);
+}
+
+.account-center__session-card + .account-center__session-card,
+.account-center__activity-row + .account-center__activity-row {
+  border-top: var(--border-width-default) solid var(--color-border-subtle);
+}
+
+.account-center__session-device {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-control);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+}
+
+.account-center__session-card > div:not(.account-center__session-card-action),
+.account-center__activity-row > div {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.account-center__session-card strong,
+.account-center__activity-row strong {
+  overflow-wrap: anywhere;
+}
+
+.account-center__session-card-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.account-center__activity-row time {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  white-space: nowrap;
+}
+
 @media (max-width: 56rem) {
   .account-center__layout {
     grid-template-columns: minmax(0, 1fr);
@@ -5375,6 +5464,27 @@ textarea:disabled {
   .account-center__session-action {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .account-center__security-section-heading,
+  .account-center__session-card,
+  .account-center__activity-row {
+    align-items: flex-start;
+  }
+
+  .account-center__session-card,
+  .account-center__activity-row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .account-center__session-card-action,
+  .account-center__activity-row time {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+
+  .account-center__activity-row time {
+    white-space: normal;
   }
 
   .account-center__session-action .ui-button {

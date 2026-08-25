@@ -66,6 +66,25 @@ export const authApi = {
     return data;
   },
 
+  async getSessions() {
+    const { data } = await http.get("/api/auth/sessions/");
+    return data;
+  },
+
+  async revokeSession(sessionId) {
+    await http.delete(`/api/auth/sessions/${sessionId}/`);
+  },
+
+  async revokeOtherSessions() {
+    const { data } = await http.post("/api/auth/sessions/revoke-others/");
+    return data;
+  },
+
+  async getAuthenticationActivity() {
+    const { data } = await http.get("/api/auth/activity/");
+    return data;
+  },
+
   async beginMfaEnrollment(password) {
     const { data } = await http.post("/api/auth/mfa/enroll/", { password });
     return data;

@@ -106,6 +106,64 @@ class RevokedToken(models.Model):
         indexes = [models.Index(fields=("jti", "expires_at"))]
 
 
+class UserSession(models.Model):
+    """Opaque application session bound to exactly one user and token family."""
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="security_sessions")
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_activity_at = models.DateTimeField(auto_now=True)
+    revoked_at = models.DateTimeField(null=True, blank=True, editable=False)
+    browser_family = models.CharField(max_length=40, default="Unknown", editable=False)
+    operating_system = models.CharField(max_length=40, default="Unknown", editable=False)
+    device_type = models.CharField(max_length=20, default="Desktop", editable=False)
+    network_prefix = models.CharField(max_length=64, blank=True, editable=False)
+    authentication_method = models.CharField(max_length=20, default="password", editable=False)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=("user", "revoked_at")),
+            models.Index(fields=("user", "last_activity_at")),
+        ]
+
+    @property
+    def is_active(self):
+        return self.revoked_at is None
+
+
+class AuthenticationActivity(models.Model):
+    """Safe, user-visible authentication event; never stores credentials or payloads."""
+
+    EVENT_CHOICES = [
+        ("login_success", "Successful login"),
+        ("login_failure", "Failed login"),
+        ("logout", "Logout"),
+        ("session_revoked", "Session revoked"),
+        ("password_reset", "Password reset"),
+        ("mfa_enrolled", "MFA enrolled"),
+        ("mfa_disabled", "MFA disabled"),
+        ("recovery_code_used", "Recovery code used"),
+    ]
+
+    id = models.BigAutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="authentication_activity")
+    event_type = models.CharField(max_length=32, choices=EVENT_CHOICES)
+    occurred_at = models.DateTimeField(auto_now_add=True)
+    success = models.BooleanField(default=True)
+    browser_family = models.CharField(max_length=40, default="Unknown", editable=False)
+    operating_system = models.CharField(max_length=40, default="Unknown", editable=False)
+    device_type = models.CharField(max_length=20, default="Desktop", editable=False)
+    network_prefix = models.CharField(max_length=64, blank=True, editable=False)
+    session = models.ForeignKey(UserSession, null=True, blank=True, on_delete=models.SET_NULL, related_name="activity")
+
+    class Meta:
+        ordering = ("-occurred_at",)
+        indexes = [
+            models.Index(fields=("user", "occurred_at")),
+            models.Index(fields=("user", "event_type", "occurred_at")),
+        ]
+
+
 class MFAConfiguration(models.Model):
     """Encrypted TOTP configuration owned by exactly one user."""
 

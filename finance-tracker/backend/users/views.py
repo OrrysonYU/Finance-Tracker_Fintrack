@@ -32,8 +32,15 @@ from .serializers import (
     SecureTokenRefreshSerializer,
 )
 from .mfa import decrypt_secret, provisioning_uri, recovery_hash, verify_totp
-from .models import MFAChallenge, MFAConfiguration, MFAEnrollment, MFARecoveryCode
-from .services_mfa import begin_enrollment, confirm_enrollment, disable_mfa, replace_recovery_codes
+from .models import AuthenticationActivity, MFAChallenge, MFAConfiguration, MFAEnrollment, MFARecoveryCode, UserSession
+from .services_mfa import begin_enrollment, confirm_enrollment, disable_mfa, replace_recovery_codes, revoke_user_sessions
+from .session_services import (
+    ACTIVITY_RESPONSE_LIMIT,
+    prune_activity,
+    record_activity,
+    revoke_other_sessions,
+    revoke_session,
+)
 import hashlib
 from .tokens import issue_token_pair
 from .services import ProfileImageValidationError, delete_profile_image, replace_profile_image
@@ -54,7 +61,7 @@ class RegisterView(CreateAPIView):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
-        tokens = issue_token_pair(user)
+        tokens = issue_token_pair(user, request=request, authentication_method="password")
 
         return Response(
             {
@@ -91,6 +98,7 @@ class MFAChallengeView(APIView):
             code = serializer.validated_data["code"]
             config = MFAConfiguration.objects.select_for_update().filter(user=challenge.user, user__mfa_enabled=True).first()
             valid = False
+            used_recovery_code = False
             if config:
                 secret = decrypt_secret(config.secret_encrypted)
                 step = verify_totp(secret, code)
@@ -104,12 +112,16 @@ class MFAChallengeView(APIView):
                     code_obj.used_at = timezone.now()
                     code_obj.save(update_fields=["used_at"])
                     valid = True
+                    used_recovery_code = True
             if not valid:
                 challenge.save(update_fields=["attempts"])
                 return generic
             challenge.used_at = timezone.now()
             challenge.save(update_fields=["attempts", "used_at"])
-            return Response({**issue_token_pair(challenge.user), "user": UserSerializer(challenge.user).data})
+            tokens = issue_token_pair(challenge.user, request=request, authentication_method="mfa")
+            if used_recovery_code:
+                record_activity(challenge.user, "recovery_code_used", request=request)
+            return Response({**tokens, "user": UserSerializer(challenge.user).data})
 
 
 class MFAStatusView(APIView):
@@ -154,7 +166,8 @@ class MFAEnrollConfirmView(APIView):
             config = confirm_enrollment(request.user, secret, step)
             recovery_codes = replace_recovery_codes(config)
             request.user.refresh_from_db()
-            tokens = issue_token_pair(request.user)
+            tokens = issue_token_pair(request.user, request=request, authentication_method="mfa")
+            record_activity(request.user, "mfa_enrolled", request=request)
         return Response({"enabled": True, "recovery_codes": recovery_codes, **tokens})
 
 
@@ -210,7 +223,9 @@ class MFADisableView(APIView):
                     return Response({"detail": "A valid MFA code is required."}, status=status.HTTP_400_BAD_REQUEST)
             disable_mfa(request.user)
         request.user.refresh_from_db()
-        return Response({"enabled": False, **issue_token_pair(request.user)})
+        tokens = issue_token_pair(request.user, request=request, authentication_method="password")
+        record_activity(request.user, "mfa_disabled", request=request)
+        return Response({"enabled": False, **tokens})
 
 
 class RefreshView(TokenRefreshView):
@@ -246,7 +261,80 @@ class LogoutView(APIView):
                 )
             except (TokenError, KeyError, TypeError, ValueError):
                 pass
+            session_id = request.auth.get("sid")
+            if session_id:
+                session = UserSession.objects.filter(pk=session_id, user=request.user).first()
+                if session:
+                    revoke_session(session, event=False, request=request)
+                    record_activity(request.user, "logout", request=request, session=session)
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+def session_payload(session, current_id=None):
+    return {
+        "id": str(session.id),
+        "created_at": session.created_at,
+        "last_active_at": session.last_activity_at,
+        "browser": session.browser_family,
+        "operating_system": session.operating_system,
+        "device_type": session.device_type,
+        "authentication_method": session.authentication_method,
+        "active": session.revoked_at is None,
+        "current": str(session.id) == str(current_id) if current_id else False,
+    }
+
+
+class SessionsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        current_id = request.auth.get("sid") if request.auth else None
+        sessions = UserSession.objects.filter(user=request.user, revoked_at__isnull=True).order_by("-last_activity_at")
+        return Response({"sessions": [session_payload(session, current_id) for session in sessions]})
+
+
+class SessionRevokeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, session_id):
+        session = UserSession.objects.filter(pk=session_id, user=request.user, revoked_at__isnull=True).first()
+        if not session:
+            return Response({"detail": "Session not found."}, status=status.HTTP_404_NOT_FOUND)
+        if request.auth and str(request.auth.get("sid")) == str(session.id):
+            return Response({"detail": "Use sign out to end the current session."}, status=status.HTTP_400_BAD_REQUEST)
+        revoke_session(session, request=request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class RevokeOtherSessionsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        current_id = request.auth.get("sid") if request.auth else None
+        if not current_id:
+            return Response({"detail": "The current session could not be identified."}, status=status.HTTP_401_UNAUTHORIZED)
+        revoked = revoke_other_sessions(request.user, current_id, request=request)
+        return Response({"revoked_count": len(revoked)}, status=status.HTTP_200_OK)
+
+
+class AuthenticationActivityView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        prune_activity(request.user)
+        events = AuthenticationActivity.objects.filter(user=request.user).order_by("-occurred_at", "-id")[:ACTIVITY_RESPONSE_LIMIT]
+        return Response({"activity": [
+            {
+                "id": event.id,
+                "event_type": event.event_type,
+                "timestamp": event.occurred_at,
+                "success": event.success,
+                "browser": event.browser_family,
+                "operating_system": event.operating_system,
+                "device_type": event.device_type,
+            }
+            for event in events
+        ]})
 
 
 class PasswordResetRequestView(APIView):
@@ -304,6 +392,8 @@ class PasswordResetConfirmView(APIView):
             user.save(update_fields=["password", "auth_epoch", "last_login"])
             for outstanding in OutstandingToken.objects.filter(user=user, expires_at__gt=timezone.now()):
                 BlacklistedToken.objects.get_or_create(token=outstanding)
+            revoke_user_sessions(user)
+            record_activity(user, "password_reset", request=request)
         return Response({"detail": "Your password has been reset."}, status=status.HTTP_200_OK)
 
 

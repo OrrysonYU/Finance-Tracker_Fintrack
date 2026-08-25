@@ -3,7 +3,8 @@ from django.utils import timezone
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 
 from .mfa import encrypt_secret, generate_recovery_code, generate_totp_secret, recovery_hash
-from .models import MFAConfiguration, MFAEnrollment, MFARecoveryCode
+from .models import MFAConfiguration, MFAEnrollment, MFARecoveryCode, UserSession
+from .session_services import blacklist_session_refresh_tokens
 
 
 def revoke_user_sessions(user):
@@ -12,6 +13,11 @@ def revoke_user_sessions(user):
     user.save(update_fields=["auth_epoch"])
     for outstanding in OutstandingToken.objects.filter(user=user, expires_at__gt=now):
         BlacklistedToken.objects.get_or_create(token=outstanding)
+    sessions = UserSession.objects.filter(user=user, revoked_at__isnull=True)
+    for session in sessions:
+        session.revoked_at = now
+        session.save(update_fields=["revoked_at"])
+        blacklist_session_refresh_tokens(session)
 
 
 @transaction.atomic
