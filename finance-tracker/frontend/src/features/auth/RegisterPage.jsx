@@ -7,6 +7,7 @@ import { Alert, Button, PasswordField, TextField } from "../../components/ui";
 import { useAuth } from "../../context/useAuth";
 import { getRegistrationErrors } from "./auth-errors";
 import { AuthLayout } from "./components/AuthLayout";
+import { GoogleButton } from "./components/GoogleButton";
 import {
   hasValidationErrors,
   validateRegistration,
@@ -31,12 +32,13 @@ const initialForm = { email: "", password: "", username: "" };
 const emptyApiErrors = { fields: {}, form: "" };
 
 export default function RegisterPage() {
-  const { register } = useAuth();
+  const { register, beginGoogleSignIn } = useAuth();
   const fieldRefs = useRef({});
   const [form, setForm] = useState(initialForm);
   const [touched, setTouched] = useState({});
   const [apiErrors, setApiErrors] = useState(emptyApiErrors);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const validation = validateRegistration(form);
 
   const fieldError = (name) =>
@@ -82,6 +84,7 @@ export default function RegisterPage() {
       setLoading(false);
     }
   };
+  const handleGoogle = async () => { setGoogleLoading(true); setApiErrors(emptyApiErrors); try { await beginGoogleSignIn(); } catch { setApiErrors({ fields: {}, form: "Google authentication could not be started. Please try again." }); setGoogleLoading(false); } };
 
   return (
     <AuthLayout
@@ -178,6 +181,8 @@ export default function RegisterPage() {
           {!loading && <ArrowRight size={18} aria-hidden="true" />}
         </Button>
       </form>
+      <div className="auth-provider-divider" aria-hidden="true"><span>or</span></div>
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading} />
     </AuthLayout>
   );
 }

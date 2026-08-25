@@ -1855,6 +1855,10 @@ textarea:disabled {
   gap: var(--space-4);
 }
 
+.auth-google-button { width: 100%; }
+.auth-provider-divider { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-5) 0; color: var(--color-text-muted); font-size: var(--font-size-small); }
+.auth-provider-divider::before, .auth-provider-divider::after { content: ""; flex: 1; height: 1px; background: var(--color-border-subtle); }
+
 .auth-shell__theme-toggle {
   position: absolute;
   top: var(--space-4);

@@ -11,6 +11,30 @@ function persistTokens(data) {
 }
 
 export const authApi = {
+  async beginGoogleSignIn() {
+    const { data } = await http.get("/api/auth/oauth/google/start/", { skipAuthRefresh: true });
+    return data;
+  },
+
+  async completeGoogleSignIn(payload) {
+    const { data } = await http.post("/api/auth/oauth/google/callback/", payload, { skipAuthRefresh: true });
+    if (data.access && data.refresh) persistTokens(data);
+    return data;
+  },
+
+  async getIdentities() {
+    const { data } = await http.get("/api/auth/identities/");
+    return data;
+  },
+
+  async beginGoogleLink(password, code) {
+    const { data } = await http.post("/api/auth/identities/google/link/", { password, ...(code ? { code } : {}) });
+    return data;
+  },
+
+  async unlinkIdentity(provider, password, code) {
+    await http.delete(`/api/auth/identities/${encodeURIComponent(provider)}/`, { data: { password, ...(code ? { code } : {}) } });
+  },
   async login(credentials) {
     const { data } = await http.post("/api/auth/token/", credentials);
     if (data.access && data.refresh) persistTokens(data);

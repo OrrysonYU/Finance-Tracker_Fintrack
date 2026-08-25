@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, KeyRound, Laptop, LogOut, RefreshCw, ShieldCheck, ShieldOff, Smartphone, Tablet, XCircle } from "lucide-react";
+import { Chrome, Copy, KeyRound, Laptop, LogOut, RefreshCw, ShieldCheck, ShieldOff, Smartphone, Tablet, XCircle } from "lucide-react";
 
 import { Alert, Button, ConfirmDialog, PasswordField, StateMessage, TextField } from "../../../components/ui";
 import { authApi } from "../../auth/api";
@@ -26,6 +26,8 @@ export function SecuritySettings({ user, onSignOut }) {
   const [pendingSession, setPendingSession] = useState(null);
   const [confirmAll, setConfirmAll] = useState(false);
   const [sessionActionLoading, setSessionActionLoading] = useState(false);
+  const [identities, setIdentities] = useState([]);
+  const [identityLoading, setIdentityLoading] = useState(true);
 
   const loadStatus = async () => {
     try {
@@ -38,6 +40,7 @@ export function SecuritySettings({ user, onSignOut }) {
   useEffect(() => {
     void loadStatus();
     async function loadSecurityCenter() {
+      try { const data = await authApi.getIdentities(); setIdentities(data.identities || []); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Connected identities could not be loaded.") }); } finally { setIdentityLoading(false); }
       if (typeof authApi.getSessions !== "function") {
         setSessionsLoading(false); setActivityLoading(false); return;
       }
@@ -151,9 +154,19 @@ export function SecuritySettings({ user, onSignOut }) {
   };
 
   const enabled = Boolean(status?.enabled);
+  const googleIdentity = identities.find((identity) => identity.provider === "google");
+  const beginGoogleLink = async () => { setIdentityLoading(true); setMessage(null); try { const data = await authApi.beginGoogleLink(password, code.trim()); window.location.assign(data.authorization_url); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Google could not be connected.") }); setIdentityLoading(false); } };
+  const unlinkGoogle = async () => { setIdentityLoading(true); setMessage(null); try { await authApi.unlinkIdentity("google", password, code.trim()); setIdentities((current) => current.filter((identity) => identity.provider !== "google")); setMessage({ tone: "success", text: "Google was disconnected." }); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Google could not be disconnected.") }); } finally { setIdentityLoading(false); } };
 
   return (
     <div className="account-center__security">
+      <div className="account-center__security-row">
+        <span className="account-center__security-icon" aria-hidden="true"><Chrome size={18} /></span>
+        <div><strong>Google identity</strong><span>{googleIdentity ? `Connected as ${googleIdentity.email}` : "Not connected"}</span></div>
+        {googleIdentity ? <Button variant="secondary" size="sm" onClick={() => void unlinkGoogle()} loading={identityLoading} disabled={!password || (enabled && !code.trim())}>Disconnect</Button> : <Button variant="secondary" size="sm" onClick={() => void beginGoogleLink()} loading={identityLoading} disabled={!password || (enabled && !code.trim())}>Connect Google</Button>}
+      </div>
+      {!googleIdentity && <div className="account-center__mfa-fields"><PasswordField id="google-link-password" label="Confirm password to connect Google" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />{enabled && <TextField id="google-link-code" label="Fresh MFA code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" inputMode="numeric" />}</div>}
+      {googleIdentity && <div className="account-center__mfa-fields"><PasswordField id="google-unlink-password" label="Confirm password to disconnect Google" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />{enabled && <TextField id="google-unlink-code" label="Fresh MFA code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" inputMode="numeric" />}</div>}
       <div className="account-center__security-row">
         <span className="account-center__security-icon" aria-hidden="true"><KeyRound size={18} /></span>
         <div>

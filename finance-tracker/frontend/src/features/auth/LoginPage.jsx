@@ -1,12 +1,13 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ArrowLeft, ArrowRight, KeyRound, UserRound } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 import { Alert, Button, PasswordField, TextField } from "../../components/ui";
 import { useAuth } from "../../context/useAuth";
 import { getLoginError } from "./auth-errors";
 import { AuthLayout } from "./components/AuthLayout";
+import { GoogleButton } from "./components/GoogleButton";
 import {
   hasValidationErrors,
   validateLogin,
@@ -30,7 +31,8 @@ const storyPoints = [
 const initialForm = { username: "", password: "" };
 
 export default function LoginPage() {
-  const { login, verifyMfa, sessionError } = useAuth();
+  const { login, verifyMfa, beginGoogleSignIn, sessionError } = useAuth();
+  const location = useLocation();
   const fieldRefs = useRef({});
   const [form, setForm] = useState(initialForm);
   const [touched, setTouched] = useState({});
@@ -39,8 +41,11 @@ export default function LoginPage() {
   const [mfaChallenge, setMfaChallenge] = useState("");
   const [mfaCode, setMfaCode] = useState("");
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const validation = validateLogin(form);
   const visibleError = formError || sessionError;
+  useEffect(() => { if (location.state?.googleMfaChallenge) setMfaChallenge(location.state.googleMfaChallenge); }, [location.state]);
+  const handleGoogle = async () => { setGoogleLoading(true); setFormError(""); try { await beginGoogleSignIn(); } catch { setFormError("Google authentication could not be started. Please try again."); setGoogleLoading(false); } };
 
   const fieldError = (name) => (touched[name] ? validation[name] : "");
 
@@ -159,6 +164,7 @@ export default function LoginPage() {
           </div>
         </form>
       ) : (
+      <>
       <form className="auth-form" onSubmit={handleSubmit} noValidate>
         <TextField
           ref={(element) => {
@@ -206,6 +212,9 @@ export default function LoginPage() {
           {!loading && <ArrowRight size={18} aria-hidden="true" />}
         </Button>
       </form>
+      <div className="auth-provider-divider" aria-hidden="true"><span>or</span></div>
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading} />
+      </>
       )}
     </AuthLayout>
   );

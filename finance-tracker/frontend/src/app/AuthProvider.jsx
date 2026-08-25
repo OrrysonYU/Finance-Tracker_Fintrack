@@ -97,6 +97,18 @@ export function AuthProvider({ children }) {
     return data;
   };
 
+  const beginGoogleSignIn = async () => {
+    const data = await authApi.beginGoogleSignIn();
+    window.location.assign(data.authorization_url);
+  };
+
+  const completeGoogleSignIn = async (payload) => {
+    setSessionError("");
+    const data = await authApi.completeGoogleSignIn(payload);
+    if (data.user) setUser(await hydrateUser(data.user));
+    return data;
+  };
+
   const logout = () => {
     if (profileObjectUrl.current && typeof URL !== "undefined") {
       URL.revokeObjectURL(profileObjectUrl.current);
@@ -127,7 +139,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, sessionError, login, verifyMfa, register, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
+      value={{ user, loading, sessionError, login, verifyMfa, register, beginGoogleSignIn, completeGoogleSignIn, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
     >
       {children}
     </AuthContext.Provider>
