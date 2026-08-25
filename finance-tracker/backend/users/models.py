@@ -95,6 +95,50 @@ class User(AbstractUser):
         return super().save(*args, **kwargs)
 
 
+class Identity(models.Model):
+    """A verified external identity attached to one Fintrack user.
+
+    ``provider_subject`` is the provider's stable subject (Google ``sub``),
+    never an email address or display name.  The uniqueness constraint is the
+    account-linking invariant that prevents an identity collision.
+    """
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="identities")
+    provider = models.CharField(max_length=32)
+    provider_subject = models.CharField(max_length=255)
+    email = models.EmailField(blank=True)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=("provider", "provider_subject"),
+                name="unique_identity_provider_subject",
+            ),
+            models.UniqueConstraint(fields=("user", "provider"), name="unique_user_provider_identity"),
+        ]
+        indexes = [models.Index(fields=("user", "provider"))]
+
+
+class OAuthAttempt(models.Model):
+    """Short-lived, single-use OAuth state/nonce bound to an auth attempt."""
+
+    state_hash = models.CharField(max_length=64, unique=True, editable=False)
+    nonce_hash = models.CharField(max_length=64, unique=True, editable=False)
+    provider = models.CharField(max_length=32)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE)
+    purpose = models.CharField(max_length=16, default="login")
+    redirect_uri = models.URLField(max_length=500)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True, editable=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [models.Index(fields=("provider", "expires_at"))]
+
+
 class RevokedToken(models.Model):
     """Access-token JTIs revoked before their natural expiry."""
 

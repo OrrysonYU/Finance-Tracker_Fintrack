@@ -19,11 +19,21 @@ from .views import (
     SessionRevokeView,
     RevokeOtherSessionsView,
     AuthenticationActivityView,
+    GoogleStartView,
+    GoogleCallbackView,
+    IdentityListView,
+    GoogleLinkStartView,
+    IdentityUnlinkView,
 )
 
 urlpatterns = [
     path("register/", RegisterView.as_view(), name="register"),
     path("token/", LoginView.as_view(), name="token_obtain_pair"),
+    path("oauth/google/start/", GoogleStartView.as_view(), name="google-oauth-start"),
+    path("oauth/google/callback/", GoogleCallbackView.as_view(), name="google-oauth-callback"),
+    path("identities/", IdentityListView.as_view(), name="identities"),
+    path("identities/google/link/", GoogleLinkStartView.as_view(), name="google-identity-link-start"),
+    path("identities/<str:provider>/", IdentityUnlinkView.as_view(), name="identity-unlink"),
     path("token/refresh/", RefreshView.as_view(), name="token_refresh"),
     path("mfa/challenge/", MFAChallengeView.as_view(), name="mfa_challenge"),
     path("mfa/status/", MFAStatusView.as_view(), name="mfa_status"),

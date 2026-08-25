@@ -32,3 +32,19 @@ class RevocableJWTAuthentication(JWTAuthentication):
         session.last_activity_at = django_timezone.now()
         session.save(update_fields=("last_activity_at",))
         return user, token
+
+
+class OptionalRevocableJWTAuthentication(RevocableJWTAuthentication):
+    """Identify the caller when possible, but never reject the request outright.
+
+    The Google callback is AllowAny and a browser may still hold a stale access token from an
+    earlier session. Raising would turn a legitimate sign-in into a 401 before the view runs.
+    Callers that need identity (link attempts) must check ``request.user`` themselves and fail
+    closed, which is what ``GoogleCallbackView`` does.
+    """
+
+    def authenticate(self, request):
+        try:
+            return super().authenticate(request)
+        except AuthenticationFailed:
+            return None

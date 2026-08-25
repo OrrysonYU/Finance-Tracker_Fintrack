@@ -31,8 +31,11 @@ from .serializers import (
     MFAReauthSerializer,
     SecureTokenRefreshSerializer,
 )
-from .mfa import decrypt_secret, provisioning_uri, recovery_hash, verify_totp
+from .authentication import OptionalRevocableJWTAuthentication
+from .mfa import decrypt_secret, generate_challenge_token, provisioning_uri, recovery_hash, verify_totp
 from .models import AuthenticationActivity, MFAChallenge, MFAConfiguration, MFAEnrollment, MFARecoveryCode, UserSession
+from .models import Identity
+from .oauth import OAuthError, begin_google_attempt, consume_attempt, resolve_google_identity, verify_google_code
 from .services_mfa import begin_enrollment, confirm_enrollment, disable_mfa, replace_recovery_codes, revoke_user_sessions
 from .session_services import (
     ACTIVITY_RESPONSE_LIMIT,
@@ -77,6 +80,116 @@ class LoginView(TokenObtainPairView):
     permission_classes = [permissions.AllowAny]
     throttle_classes = [AuthScopedRateThrottle]
     throttle_scope = "auth_login"
+
+
+class GoogleStartView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+
+    def get(self, request):
+        try:
+            response = Response(begin_google_attempt())
+            response["Cache-Control"] = "no-store"
+            return response
+        except OAuthError as exc:
+            return Response({"detail": exc.message}, status=status.HTTP_503_SERVICE_UNAVAILABLE if exc.code == "provider_unavailable" else status.HTTP_400_BAD_REQUEST)
+
+
+class GoogleCallbackView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [OptionalRevocableJWTAuthentication]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+
+    def _no_store(self, response):
+        response["Cache-Control"] = "no-store"
+        return response
+
+    def _complete(self, request, payload):
+        try:
+            attempt = consume_attempt(payload.get("state"))
+            # A link attempt may only be completed by the account that started it. Without
+            # this the callback is CSRF-able: an attacker starts a link on their own account
+            # and lures the victim through the authorization URL, binding the victim's Google
+            # identity to the attacker's account.
+            if attempt.purpose == "link" and (not request.user.is_authenticated or request.user.pk != attempt.user_id):
+                raise OAuthError("Sign in again before connecting Google to your account.", "link_not_authorized")
+            if payload.get("error"):
+                raise OAuthError("Google authentication was cancelled or could not be completed.", "provider_error")
+            identity = verify_google_code(payload.get("code"), attempt)
+            user, linked = resolve_google_identity(identity, attempt)
+            if attempt.purpose == "link":
+                return self._no_store(Response({"linked": linked, "provider": "google"}, status=status.HTTP_200_OK))
+            if user.mfa_enabled:
+                token, token_hash = generate_challenge_token()
+                MFAChallenge.objects.create(user=user, token_hash=token_hash, expires_at=timezone.now() + timedelta(seconds=settings.MFA_CHALLENGE_TIMEOUT_SECONDS))
+                return self._no_store(Response({"mfa_required": True, "mfa_challenge": token}, status=status.HTTP_200_OK))
+            tokens = issue_token_pair(user, request=request, authentication_method="google")
+            return self._no_store(Response({**tokens, "user": UserSerializer(user).data}, status=status.HTTP_200_OK))
+        except OAuthError as exc:
+            return self._no_store(Response({"detail": exc.message}, status=status.HTTP_400_BAD_REQUEST))
+
+    def post(self, request):
+        return self._complete(request, request.data)
+
+
+class IdentityListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        return Response({"identities": [{"provider": item.provider, "verified": bool(item.verified_at), "verified_at": item.verified_at, "email": item.email} for item in request.user.identities.all()]})
+
+
+class GoogleLinkStartView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+
+    def post(self, request):
+        password = request.data.get("password", "")
+        if not password or not request.user.has_usable_password() or not request.user.check_password(password):
+            return Response({"detail": "Recent authentication is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.mfa_enabled:
+            code = str(request.data.get("code", "")).strip()
+            config = MFAConfiguration.objects.filter(user=request.user, confirmed_at__isnull=False).first()
+            step = verify_totp(decrypt_secret(config.secret_encrypted), code) if config and code else None
+            if step is None or (config.last_used_step is not None and step <= config.last_used_step):
+                return Response({"detail": "A fresh MFA code is required."}, status=status.HTTP_400_BAD_REQUEST)
+            config.last_used_step = step
+            config.save(update_fields=("last_used_step",))
+        try:
+            response = Response(begin_google_attempt(user=request.user, purpose="link"))
+            response["Cache-Control"] = "no-store"
+            return response
+        except OAuthError as exc:
+            return Response({"detail": exc.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class IdentityUnlinkView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, provider):
+        if not request.user.has_usable_password() and request.user.identities.count() <= 1:
+            return Response({"detail": "Add a password before disconnecting your only sign-in method."}, status=status.HTTP_400_BAD_REQUEST)
+        password = request.data.get("password", "")
+        if not password or not request.user.has_usable_password() or not request.user.check_password(password):
+            return Response({"detail": "Recent authentication is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.mfa_enabled:
+            code = str(request.data.get("code", "")).strip()
+            config = MFAConfiguration.objects.filter(user=request.user, confirmed_at__isnull=False).first()
+            step = verify_totp(decrypt_secret(config.secret_encrypted), code) if config and code else None
+            if step is None or (config.last_used_step is not None and step <= config.last_used_step):
+                return Response({"detail": "A fresh MFA code is required."}, status=status.HTTP_400_BAD_REQUEST)
+            config.last_used_step = step
+            config.save(update_fields=("last_used_step",))
+        identity = Identity.objects.filter(user=request.user, provider=provider).first()
+        if not identity:
+            return Response({"detail": "Identity not found."}, status=status.HTTP_404_NOT_FOUND)
+        if not request.user.has_usable_password() and request.user.identities.count() <= 1:
+            return Response({"detail": "Add a password before disconnecting your only sign-in method."}, status=status.HTTP_400_BAD_REQUEST)
+        identity.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class MFAChallengeView(APIView):
