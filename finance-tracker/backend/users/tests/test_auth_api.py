@@ -1,4 +1,5 @@
 from datetime import timedelta
+from unittest import mock
 
 from django.contrib.auth import get_user_model
 from django.core import mail
@@ -8,7 +9,10 @@ from django.contrib.auth.tokens import default_token_generator
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
+from rest_framework.throttling import SimpleRateThrottle
 from rest_framework_simplejwt.tokens import AccessToken
+
+from users.throttles import AuthScopedRateThrottle
 
 
 class AuthApiTest(APITestCase):
@@ -182,6 +186,27 @@ class AuthApiTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
+    def _pinned_login_throttle(self, rate="3/minute"):
+        """Pin the login throttle to an explicit rate and a frozen clock.
+
+        DRF binds ``THROTTLE_RATES`` when ``rest_framework.throttling`` is imported, so
+        ``override_settings(REST_FRAMEWORK=...)`` cannot change it -- the project already
+        works around this in ``test_mfa_api`` with the same ``mock.patch.object`` pattern.
+        The clock is frozen because ``SimpleRateThrottle`` uses a sliding window: if the
+        requests in the loop span more than the window, the earliest history entries expire
+        and the final request is legitimately allowed (HTTP 401), which makes an unpinned
+        assertion fail on a slow or contended runner rather than reporting a real defect.
+        """
+        rates = {**AuthScopedRateThrottle.THROTTLE_RATES, "auth_login": rate}
+        return (
+            mock.patch.object(AuthScopedRateThrottle, "THROTTLE_RATES", rates),
+            mock.patch.object(SimpleRateThrottle, "timer", staticmethod(lambda: 1_000_000.0)),
+        )
+
+    def test_login_throttle_is_configured_in_production_settings(self):
+        # Guard the control itself: an unset rate silently disables login throttling.
+        self.assertIsNotNone(AuthScopedRateThrottle.THROTTLE_RATES.get("auth_login"))
+
     def test_repeated_invalid_logins_are_throttled(self):
         cache.clear()
         get_user_model().objects.create_user(
@@ -189,19 +214,74 @@ class AuthApiTest(APITestCase):
             email="throttle@example.com",
             password="StrongPass123!",
         )
-        for _ in range(10):
-            response = self.client.post(
+        rate_patch, clock_patch = self._pinned_login_throttle("3/minute")
+        with rate_patch, clock_patch:
+            for _ in range(3):
+                response = self.client.post(
+                    self.token_url,
+                    {"username": "throttle-user", "password": "wrong-password"},
+                    format="json",
+                )
+                self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+            throttled = self.client.post(
                 self.token_url,
                 {"username": "throttle-user", "password": "wrong-password"},
                 format="json",
             )
-            self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
-        response = self.client.post(
-            self.token_url,
-            {"username": "throttle-user", "password": "wrong-password"},
-            format="json",
+            # A correct password must not escape the throttle either, or the control only
+            # slows down attackers who never guess right.
+            valid = self.client.post(
+                self.token_url,
+                {"username": "throttle-user", "password": "StrongPass123!"},
+                format="json",
+            )
+
+        self.assertEqual(throttled.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(valid.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertNotIn("access", throttled.data)
+        # The throttled response must not disclose whether the account exists.
+        self.assertNotIn("throttle-user", str(throttled.data))
+
+    def test_login_throttle_does_not_block_unrelated_accounts(self):
+        cache.clear()
+        get_user_model().objects.create_user(
+            username="noisy-user",
+            email="noisy@example.com",
+            password="StrongPass123!",
         )
-        self.assertEqual(response.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        get_user_model().objects.create_user(
+            username="quiet-user",
+            email="quiet@example.com",
+            password="StrongPass123!",
+        )
+        rate_patch, clock_patch = self._pinned_login_throttle("3/minute")
+        with rate_patch, clock_patch:
+            for _ in range(4):
+                self.client.post(
+                    self.token_url,
+                    {"username": "noisy-user", "password": "wrong-password"},
+                    format="json",
+                )
+            noisy = self.client.post(
+                self.token_url,
+                {"username": "noisy-user", "password": "StrongPass123!"},
+                format="json",
+            )
+            quiet = self.client.post(
+                self.token_url,
+                {"username": "quiet-user", "password": "StrongPass123!"},
+                format="json",
+            )
+            unknown = self.client.post(
+                self.token_url,
+                {"username": "no-such-user", "password": "wrong-password"},
+                format="json",
+            )
+
+        self.assertEqual(noisy.status_code, status.HTTP_429_TOO_MANY_REQUESTS)
+        self.assertEqual(quiet.status_code, status.HTTP_200_OK)
+        self.assertIn("access", quiet.data)
+        self.assertEqual(unknown.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_refresh_rotation_and_logout_revoke_credentials(self):
         user = get_user_model().objects.create_user(
