@@ -8,6 +8,7 @@ import { useAuth } from "../../context/useAuth";
 import { getRegistrationErrors } from "./auth-errors";
 import { AuthLayout } from "./components/AuthLayout";
 import { GoogleButton } from "./components/GoogleButton";
+import { AppleButton } from "./components/AppleButton";
 import {
   hasValidationErrors,
   validateRegistration,
@@ -32,13 +33,14 @@ const initialForm = { email: "", password: "", username: "" };
 const emptyApiErrors = { fields: {}, form: "" };
 
 export default function RegisterPage() {
-  const { register, beginGoogleSignIn } = useAuth();
+  const { register, beginGoogleSignIn, beginAppleSignIn } = useAuth();
   const fieldRefs = useRef({});
   const [form, setForm] = useState(initialForm);
   const [touched, setTouched] = useState({});
   const [apiErrors, setApiErrors] = useState(emptyApiErrors);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const validation = validateRegistration(form);
 
   const fieldError = (name) =>
@@ -85,6 +87,7 @@ export default function RegisterPage() {
     }
   };
   const handleGoogle = async () => { setGoogleLoading(true); setApiErrors(emptyApiErrors); try { await beginGoogleSignIn(); } catch { setApiErrors({ fields: {}, form: "Google authentication could not be started. Please try again." }); setGoogleLoading(false); } };
+  const handleApple = async () => { setAppleLoading(true); setApiErrors(emptyApiErrors); try { await beginAppleSignIn(); } catch { setApiErrors({ fields: {}, form: "Apple authentication could not be started. Please try again." }); setAppleLoading(false); } };
 
   return (
     <AuthLayout
@@ -182,7 +185,8 @@ export default function RegisterPage() {
         </Button>
       </form>
       <div className="auth-provider-divider" aria-hidden="true"><span>or</span></div>
-      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading} />
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading || appleLoading} />
+      <AppleButton onClick={handleApple} loading={appleLoading} disabled={loading || googleLoading} />
     </AuthLayout>
   );
 }

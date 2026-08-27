@@ -21,6 +21,15 @@ export const authApi = {
     if (data.access && data.refresh) persistTokens(data);
     return data;
   },
+  async beginAppleSignIn() {
+    const { data } = await http.get("/api/auth/oauth/apple/start/", { skipAuthRefresh: true });
+    return data;
+  },
+  async completeAppleSignIn(payload) {
+    const { data } = await http.post("/api/auth/oauth/apple/callback/", payload, { skipAuthRefresh: true });
+    if (data.access && data.refresh) persistTokens(data);
+    return data;
+  },
 
   async getIdentities() {
     const { data } = await http.get("/api/auth/identities/");
@@ -29,6 +38,10 @@ export const authApi = {
 
   async beginGoogleLink(password, code) {
     const { data } = await http.post("/api/auth/identities/google/link/", { password, ...(code ? { code } : {}) });
+    return data;
+  },
+  async beginAppleLink(password, code) {
+    const { data } = await http.post("/api/auth/identities/apple/link/", { password, ...(code ? { code } : {}) });
     return data;
   },
 

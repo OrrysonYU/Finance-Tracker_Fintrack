@@ -17,6 +17,7 @@ const GoalsPage = lazy(() => import("../features/goals/GoalsPage"));
 const LoginPage = lazy(() => import("../features/auth/LoginPage"));
 const RegisterPage = lazy(() => import("../features/auth/RegisterPage"));
 const GoogleCallbackPage = lazy(() => import("../features/auth/GoogleCallbackPage"));
+const AppleCallbackPage = lazy(() => import("../features/auth/AppleCallbackPage"));
 const ReportsPage = lazy(() => import("../features/reports/ReportsPage"));
 const TransactionsPage = lazy(() => import("../features/transactions/TransactionsWorkspace"));
 const LandingPage = lazy(() => import("../features/landing/LandingPage"));
@@ -114,6 +115,7 @@ export function AppRoutes() {
           }
         />
         <Route path="/oauth/google/callback" element={<AuthRouteContent><GoogleCallbackPage /></AuthRouteContent>} />
+        <Route path="/oauth/apple/callback" element={<AuthRouteContent><AppleCallbackPage /></AuthRouteContent>} />
         <Route path="/" element={<RootRoute />}>
           <Route index element={<DashboardPage />} />
           <Route path="accounts" element={<AccountsPage />} />

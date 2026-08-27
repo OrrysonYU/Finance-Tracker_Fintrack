@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Chrome, Copy, KeyRound, Laptop, LogOut, RefreshCw, ShieldCheck, ShieldOff, Smartphone, Tablet, XCircle } from "lucide-react";
+import { Apple, Chrome, Copy, KeyRound, Laptop, LogOut, RefreshCw, ShieldCheck, ShieldOff, Smartphone, Tablet, XCircle } from "lucide-react";
 
 import { Alert, Button, ConfirmDialog, PasswordField, StateMessage, TextField } from "../../../components/ui";
 import { authApi } from "../../auth/api";
@@ -157,6 +157,9 @@ export function SecuritySettings({ user, onSignOut }) {
   const googleIdentity = identities.find((identity) => identity.provider === "google");
   const beginGoogleLink = async () => { setIdentityLoading(true); setMessage(null); try { const data = await authApi.beginGoogleLink(password, code.trim()); window.location.assign(data.authorization_url); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Google could not be connected.") }); setIdentityLoading(false); } };
   const unlinkGoogle = async () => { setIdentityLoading(true); setMessage(null); try { await authApi.unlinkIdentity("google", password, code.trim()); setIdentities((current) => current.filter((identity) => identity.provider !== "google")); setMessage({ tone: "success", text: "Google was disconnected." }); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Google could not be disconnected.") }); } finally { setIdentityLoading(false); } };
+  const appleIdentity = identities.find((identity) => identity.provider === "apple");
+  const beginAppleLink = async () => { setIdentityLoading(true); setMessage(null); try { const data = await authApi.beginAppleLink(password, code.trim()); window.location.assign(data.authorization_url); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Apple could not be connected.") }); setIdentityLoading(false); } };
+  const unlinkApple = async () => { setIdentityLoading(true); setMessage(null); try { await authApi.unlinkIdentity("apple", password, code.trim()); setIdentities((current) => current.filter((identity) => identity.provider !== "apple")); setMessage({ tone: "success", text: "Apple was disconnected." }); } catch (error) { setMessage({ tone: "error", text: apiError(error, "Apple could not be disconnected.") }); } finally { setIdentityLoading(false); } };
 
   return (
     <div className="account-center__security">
@@ -165,8 +168,15 @@ export function SecuritySettings({ user, onSignOut }) {
         <div><strong>Google identity</strong><span>{googleIdentity ? `Connected as ${googleIdentity.email}` : "Not connected"}</span></div>
         {googleIdentity ? <Button variant="secondary" size="sm" onClick={() => void unlinkGoogle()} loading={identityLoading} disabled={!password || (enabled && !code.trim())}>Disconnect</Button> : <Button variant="secondary" size="sm" onClick={() => void beginGoogleLink()} loading={identityLoading} disabled={!password || (enabled && !code.trim())}>Connect Google</Button>}
       </div>
-      {!googleIdentity && <div className="account-center__mfa-fields"><PasswordField id="google-link-password" label="Confirm password to connect Google" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />{enabled && <TextField id="google-link-code" label="Fresh MFA code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" inputMode="numeric" />}</div>}
-      {googleIdentity && <div className="account-center__mfa-fields"><PasswordField id="google-unlink-password" label="Confirm password to disconnect Google" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />{enabled && <TextField id="google-unlink-code" label="Fresh MFA code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" inputMode="numeric" />}</div>}
+      <div className="account-center__security-row">
+        <span className="account-center__security-icon" aria-hidden="true"><Apple size={18} /></span>
+        <div><strong>Apple identity</strong><span>{appleIdentity ? `Connected as ${appleIdentity.email || "private relay address"}` : "Not connected"}</span></div>
+        {appleIdentity ? <Button variant="secondary" size="sm" onClick={() => void unlinkApple()} loading={identityLoading} disabled={!password || (enabled && !code.trim())}>Disconnect</Button> : <Button variant="secondary" size="sm" onClick={() => void beginAppleLink()} loading={identityLoading} disabled={!password || (enabled && !code.trim())}>Connect Apple</Button>}
+      </div>
+      <div className="account-center__mfa-fields">
+        <PasswordField id="identity-reauth-password" label="Confirm password to connect or disconnect accounts" value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" />
+        {enabled && <TextField id="identity-reauth-code" label="Fresh MFA code" value={code} onChange={(event) => setCode(event.target.value)} autoComplete="one-time-code" inputMode="numeric" />}
+      </div>
       <div className="account-center__security-row">
         <span className="account-center__security-icon" aria-hidden="true"><KeyRound size={18} /></span>
         <div>

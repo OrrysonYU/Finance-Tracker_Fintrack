@@ -108,6 +108,16 @@ export function AuthProvider({ children }) {
     if (data.user) setUser(await hydrateUser(data.user));
     return data;
   };
+  const beginAppleSignIn = async () => {
+    const data = await authApi.beginAppleSignIn();
+    window.location.assign(data.authorization_url);
+  };
+  const completeAppleSignIn = async (payload) => {
+    setSessionError("");
+    const data = await authApi.completeAppleSignIn(payload);
+    if (data.user) setUser(await hydrateUser(data.user));
+    return data;
+  };
 
   const logout = () => {
     if (profileObjectUrl.current && typeof URL !== "undefined") {
@@ -139,7 +149,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, sessionError, login, verifyMfa, register, beginGoogleSignIn, completeGoogleSignIn, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
+      value={{ user, loading, sessionError, login, verifyMfa, register, beginGoogleSignIn, completeGoogleSignIn, beginAppleSignIn, completeAppleSignIn, logout, updateCurrentUser, uploadProfileImage, deleteProfileImage }}
     >
       {children}
     </AuthContext.Provider>

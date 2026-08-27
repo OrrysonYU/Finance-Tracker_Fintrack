@@ -183,6 +183,17 @@ GOOGLE_OIDC_CLIENT_ID = env("GOOGLE_OIDC_CLIENT_ID", "")
 GOOGLE_OIDC_CLIENT_SECRET = env("GOOGLE_OIDC_CLIENT_SECRET", "")
 GOOGLE_OIDC_REDIRECT_URI = env("GOOGLE_OIDC_REDIRECT_URI", "")
 GOOGLE_OIDC_DISCOVERY_URL = env("GOOGLE_OIDC_DISCOVERY_URL", "https://accounts.google.com/.well-known/openid-configuration")
+APPLE_OIDC_CLIENT_ID = env("APPLE_OIDC_CLIENT_ID", "")
+APPLE_OIDC_TEAM_ID = env("APPLE_OIDC_TEAM_ID", "")
+APPLE_OIDC_KEY_ID = env("APPLE_OIDC_KEY_ID", "")
+APPLE_OIDC_PRIVATE_KEY = env("APPLE_OIDC_PRIVATE_KEY", "")
+APPLE_OIDC_REDIRECT_URI = env("APPLE_OIDC_REDIRECT_URI", "")
+APPLE_OIDC_DISCOVERY_URL = env("APPLE_OIDC_DISCOVERY_URL", "https://appleid.apple.com/.well-known/openid-configuration")
+# Apple returns its authorization response as a cross-site form POST, which a static
+# SPA cannot read. The backend bridge endpoint redirects to this trusted frontend
+# origin; it is never taken from a request parameter.
+FRONTEND_BASE_URL = env("FRONTEND_BASE_URL", "")
+APPLE_OIDC_CLIENT_SECRET_LIFETIME_SECONDS = env_int("APPLE_OIDC_CLIENT_SECRET_LIFETIME_SECONDS", 15777000)
 OAUTH_ATTEMPT_TIMEOUT_SECONDS = env_int("OAUTH_ATTEMPT_TIMEOUT_SECONDS", 300)
 OIDC_CLOCK_SKEW_SECONDS = env_int("OIDC_CLOCK_SKEW_SECONDS", 60)
 OAUTH_HTTP_TIMEOUT_SECONDS = env_int("OAUTH_HTTP_TIMEOUT_SECONDS", 5)

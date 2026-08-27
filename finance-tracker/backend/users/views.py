@@ -11,12 +11,14 @@ from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.core.files.storage import default_storage
 from django.http import FileResponse
+from django.http.response import HttpResponseRedirectBase
 from rest_framework import permissions, status
 from rest_framework.generics import CreateAPIView, RetrieveUpdateAPIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.views import APIView
 
@@ -35,7 +37,17 @@ from .authentication import OptionalRevocableJWTAuthentication
 from .mfa import decrypt_secret, generate_challenge_token, provisioning_uri, recovery_hash, verify_totp
 from .models import AuthenticationActivity, MFAChallenge, MFAConfiguration, MFAEnrollment, MFARecoveryCode, UserSession
 from .models import Identity
-from .oauth import OAuthError, begin_google_attempt, consume_attempt, resolve_google_identity, verify_google_code
+from .oauth import (
+    OAuthError,
+    apple_frontend_callback_url,
+    begin_apple_attempt,
+    begin_google_attempt,
+    consume_attempt,
+    resolve_apple_identity,
+    resolve_google_identity,
+    verify_apple_code,
+    verify_google_code,
+)
 from .services_mfa import begin_enrollment, confirm_enrollment, disable_mfa, replace_recovery_codes, revoke_user_sessions
 from .session_services import (
     ACTIVITY_RESPONSE_LIMIT,
@@ -108,7 +120,7 @@ class GoogleCallbackView(APIView):
 
     def _complete(self, request, payload):
         try:
-            attempt = consume_attempt(payload.get("state"))
+            attempt = consume_attempt(payload.get("state"), "google")
             # A link attempt may only be completed by the account that started it. Without
             # this the callback is CSRF-able: an attacker starts a link on their own account
             # and lures the victim through the authorization URL, binding the victim's Google
@@ -160,6 +172,122 @@ class GoogleLinkStartView(APIView):
             config.save(update_fields=("last_used_step",))
         try:
             response = Response(begin_google_attempt(user=request.user, purpose="link"))
+            response["Cache-Control"] = "no-store"
+            return response
+        except OAuthError as exc:
+            return Response({"detail": exc.message}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class AppleStartView(APIView):
+    permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+
+    def get(self, request):
+        try:
+            response = Response(begin_apple_attempt())
+            response["Cache-Control"] = "no-store"
+            return response
+        except OAuthError as exc:
+            return Response({"detail": exc.message}, status=status.HTTP_503_SERVICE_UNAVAILABLE if exc.code == "provider_unavailable" else status.HTTP_400_BAD_REQUEST)
+
+
+class AppleCallbackView(APIView):
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [OptionalRevocableJWTAuthentication]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+
+    def post(self, request):
+        payload = request.data
+        response = None
+        try:
+            attempt = consume_attempt(payload.get("state"), "apple")
+            if attempt.purpose == "link" and (not request.user.is_authenticated or request.user.pk != attempt.user_id):
+                raise OAuthError("Sign in again before connecting Apple to your account.", "link_not_authorized")
+            if payload.get("error"):
+                raise OAuthError("Apple authentication was cancelled or could not be completed.", "provider_error")
+            identity = verify_apple_code(payload.get("code"), attempt)
+            user, linked = resolve_apple_identity(identity, attempt)
+            if attempt.purpose == "link":
+                response = Response({"linked": linked, "provider": "apple"}, status=status.HTTP_200_OK)
+            elif user.mfa_enabled:
+                token, token_hash = generate_challenge_token()
+                MFAChallenge.objects.create(user=user, token_hash=token_hash, expires_at=timezone.now() + timedelta(seconds=settings.MFA_CHALLENGE_TIMEOUT_SECONDS))
+                response = Response({"mfa_required": True, "mfa_challenge": token}, status=status.HTTP_200_OK)
+            else:
+                tokens = issue_token_pair(user, request=request, authentication_method="apple")
+                response = Response({**tokens, "user": UserSerializer(user).data}, status=status.HTTP_200_OK)
+        except OAuthError as exc:
+            response = Response({"detail": exc.message}, status=status.HTTP_400_BAD_REQUEST)
+        response["Cache-Control"] = "no-store"
+        return response
+
+
+class SeeOtherRedirect(HttpResponseRedirectBase):
+    """303 redirect. Django ships 301/302/307/308 only, and Apple's POST must become a GET."""
+
+    status_code = 303
+    allowed_schemes = ["http", "https"]
+
+
+class AppleFormCallbackView(APIView):
+    """Transport adapter for Apple's cross-site ``response_mode=form_post`` response.
+
+    Apple POSTs the authorization response here because a static SPA cannot read a
+    cross-site form POST. The bridge copies only ``state``, ``code`` and ``error``,
+    each shape-validated, onto the SPA callback route built from trusted server
+    configuration, then answers with a 303 so the browser re-issues a GET.
+
+    No OAuth state is consumed or trusted at this hop. AppleCallbackView remains the
+    single authoritative consumer, which keeps single-use state semantics intact and
+    keeps the link-ownership check where the browser's Authorization header exists --
+    Apple's cross-site POST carries no Fintrack credentials at all.
+    """
+
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = []
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+    parser_classes = [FormParser, MultiPartParser]
+
+    def post(self, request):
+        try:
+            payload = request.data
+        except ParseError:
+            payload = {}
+        forwarded = {key: payload.get(key) for key in ("state", "code", "error")}
+        try:
+            destination = apple_frontend_callback_url(**{key: value for key, value in forwarded.items() if value})
+        except OAuthError as exc:
+            response = Response({"detail": exc.message}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+            response["Cache-Control"] = "no-store"
+            return response
+        response = SeeOtherRedirect(destination)
+        response["Cache-Control"] = "no-store"
+        response["Referrer-Policy"] = "no-referrer"
+        return response
+
+
+class AppleLinkStartView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AuthScopedRateThrottle]
+    throttle_scope = "auth_oauth"
+
+    def post(self, request):
+        password = request.data.get("password", "")
+        if not password or not request.user.has_usable_password() or not request.user.check_password(password):
+            return Response({"detail": "Recent authentication is required."}, status=status.HTTP_400_BAD_REQUEST)
+        if request.user.mfa_enabled:
+            code = str(request.data.get("code", "")).strip()
+            config = MFAConfiguration.objects.filter(user=request.user, confirmed_at__isnull=False).first()
+            step = verify_totp(decrypt_secret(config.secret_encrypted), code) if config and code else None
+            if step is None or (config.last_used_step is not None and step <= config.last_used_step):
+                return Response({"detail": "A fresh MFA code is required."}, status=status.HTTP_400_BAD_REQUEST)
+            config.last_used_step = step
+            config.save(update_fields=("last_used_step",))
+        try:
+            response = Response(begin_apple_attempt(user=request.user, purpose="link"))
             response["Cache-Control"] = "no-store"
             return response
         except OAuthError as exc:

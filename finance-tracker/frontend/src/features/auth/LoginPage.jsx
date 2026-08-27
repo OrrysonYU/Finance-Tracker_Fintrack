@@ -8,6 +8,7 @@ import { useAuth } from "../../context/useAuth";
 import { getLoginError } from "./auth-errors";
 import { AuthLayout } from "./components/AuthLayout";
 import { GoogleButton } from "./components/GoogleButton";
+import { AppleButton } from "./components/AppleButton";
 import {
   hasValidationErrors,
   validateLogin,
@@ -31,7 +32,7 @@ const storyPoints = [
 const initialForm = { username: "", password: "" };
 
 export default function LoginPage() {
-  const { login, verifyMfa, beginGoogleSignIn, sessionError } = useAuth();
+  const { login, verifyMfa, beginGoogleSignIn, beginAppleSignIn, sessionError } = useAuth();
   const location = useLocation();
   const fieldRefs = useRef({});
   const [form, setForm] = useState(initialForm);
@@ -42,10 +43,12 @@ export default function LoginPage() {
   const [mfaCode, setMfaCode] = useState("");
   const [useRecoveryCode, setUseRecoveryCode] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const validation = validateLogin(form);
   const visibleError = formError || sessionError;
-  useEffect(() => { if (location.state?.googleMfaChallenge) setMfaChallenge(location.state.googleMfaChallenge); }, [location.state]);
+  useEffect(() => { if (location.state?.googleMfaChallenge) setMfaChallenge(location.state.googleMfaChallenge); if (location.state?.appleMfaChallenge) setMfaChallenge(location.state.appleMfaChallenge); }, [location.state]);
   const handleGoogle = async () => { setGoogleLoading(true); setFormError(""); try { await beginGoogleSignIn(); } catch { setFormError("Google authentication could not be started. Please try again."); setGoogleLoading(false); } };
+  const handleApple = async () => { setAppleLoading(true); setFormError(""); try { await beginAppleSignIn(); } catch { setFormError("Apple authentication could not be started. Please try again."); setAppleLoading(false); } };
 
   const fieldError = (name) => (touched[name] ? validation[name] : "");
 
@@ -213,7 +216,8 @@ export default function LoginPage() {
         </Button>
       </form>
       <div className="auth-provider-divider" aria-hidden="true"><span>or</span></div>
-      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading} />
+      <GoogleButton onClick={handleGoogle} loading={googleLoading} disabled={loading || appleLoading} />
+      <AppleButton onClick={handleApple} loading={appleLoading} disabled={loading || googleLoading} />
       </>
       )}
     </AuthLayout>

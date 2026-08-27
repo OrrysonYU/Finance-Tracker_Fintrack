@@ -23,6 +23,10 @@ from .views import (
     GoogleCallbackView,
     IdentityListView,
     GoogleLinkStartView,
+    AppleStartView,
+    AppleCallbackView,
+    AppleFormCallbackView,
+    AppleLinkStartView,
     IdentityUnlinkView,
 )
 
@@ -31,8 +35,14 @@ urlpatterns = [
     path("token/", LoginView.as_view(), name="token_obtain_pair"),
     path("oauth/google/start/", GoogleStartView.as_view(), name="google-oauth-start"),
     path("oauth/google/callback/", GoogleCallbackView.as_view(), name="google-oauth-callback"),
+    path("oauth/apple/start/", AppleStartView.as_view(), name="apple-oauth-start"),
+    path("oauth/apple/callback/", AppleCallbackView.as_view(), name="apple-oauth-callback"),
+    # Apple Developer Portal "Return URL" target: Apple form-POSTs here and the bridge
+    # redirects the browser to the SPA callback route, which calls the endpoint above.
+    path("oauth/apple/form-callback/", AppleFormCallbackView.as_view(), name="apple-oauth-form-callback"),
     path("identities/", IdentityListView.as_view(), name="identities"),
     path("identities/google/link/", GoogleLinkStartView.as_view(), name="google-identity-link-start"),
+    path("identities/apple/link/", AppleLinkStartView.as_view(), name="apple-identity-link-start"),
     path("identities/<str:provider>/", IdentityUnlinkView.as_view(), name="identity-unlink"),
     path("token/refresh/", RefreshView.as_view(), name="token_refresh"),
     path("mfa/challenge/", MFAChallengeView.as_view(), name="mfa_challenge"),

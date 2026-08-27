@@ -1856,6 +1856,7 @@ textarea:disabled {
 }
 
 .auth-google-button { width: 100%; }
+.auth-google-button + .auth-google-button { margin-top: var(--space-3); }
 .auth-provider-divider { display: flex; align-items: center; gap: var(--space-3); margin: var(--space-5) 0; color: var(--color-text-muted); font-size: var(--font-size-small); }
 .auth-provider-divider::before, .auth-provider-divider::after { content: ""; flex: 1; height: 1px; background: var(--color-border-subtle); }
 
